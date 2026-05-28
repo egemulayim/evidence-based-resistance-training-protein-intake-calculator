@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Calculation Method | Evidence-Based Resistance Training Protein Intake Calculator</title>
+    <meta
+      name="description"
+      content="Public explanation of the protein intake calculator method, assumptions, equations, and evidence basis."
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header doc-header">
+      <div class="content-wrap doc-wrap">
+        <a class="back-link" href="index.html">Back to calculator</a>
+        <h1>Calculation Method</h1>
+        <p class="intro">
+          The calculator estimates a daily protein target for generally healthy adults who perform resistance training. It is educational, not medical advice.
+        </p>
+      </div>
+    </header>
+
+    <main class="content-wrap doc-wrap doc-layout">
+      <nav class="doc-toc" aria-label="Calculation method sections">
+        <a href="#scope">Scope</a>
+        <a href="#units">Units</a>
+        <a href="#body-composition">Body composition</a>
+        <a href="#protein-model">Protein model</a>
+        <a href="#limits">Limits</a>
+        <a href="#evidence">Evidence</a>
+      </nav>
+
+      <article class="doc-article">
+        <section id="scope">
+          <h2>Scope</h2>
+          <p>
+            The calculator is intended for healthy adults who perform resistance training and have maintenance, hypertrophy, fat-loss, or recomposition goals.
+          </p>
+          <p>
+            It is not intended for kidney disease, pregnancy, adolescents, eating disorders, clinical nutrition, diagnosed medical conditions, geriatric nutrition, medically supervised weight loss, or endurance-sport planning.
+          </p>
+        </section>
+
+        <section id="units">
+          <h2>Unit Handling</h2>
+          <p>
+            Protein research is usually expressed as grams of protein per kilogram of body weight per day. Inputs are converted to kilograms internally before applying the evidence-based multipliers.
+          </p>
+          <ul>
+            <li>Metric users see kilograms first, with pounds in parentheses.</li>
+            <li>Imperial users see pounds first, with kilograms in parentheses.</li>
+          </ul>
+        </section>
+
+        <section id="body-composition">
+          <h2>Body-Composition Estimates</h2>
+          <p>The calculator always estimates BMI:</p>
+          <pre><code>BMI = weightKg / (heightM * heightM)</code></pre>
+
+          <p>If body-fat percentage is supplied, it estimates fat mass and lean body mass:</p>
+          <pre><code>fatMassKg = weightKg * (bodyFatPercent / 100)
+leanBodyMassKg = weightKg - fatMassKg</code></pre>
+
+          <p>If target body-fat percentage is supplied, it estimates goal weight while assuming lean mass is preserved:</p>
+          <pre><code>goalWeightKg = leanBodyMassKg / (1 - targetBodyFatPercent / 100)</code></pre>
+
+          <p>
+            This goal-weight estimate is not a prediction. It is only a simplified body-composition estimate.
+          </p>
+        </section>
+
+        <section id="protein-model">
+          <h2>Protein Recommendation Model</h2>
+          <p>
+            Protein values are calculated raw first, then rounded to the nearest 5 grams for display. The default target is the midpoint of the raw practical range before rounding.
+          </p>
+
+          <h3>Maintenance</h3>
+          <pre><code>minimum = weightKg * 1.4
+rangeLow = weightKg * 1.6
+rangeHigh = weightKg * 2.0</code></pre>
+
+          <h3>Muscle Gain / Hypertrophy</h3>
+          <pre><code>minimum = weightKg * 1.6
+rangeLow = weightKg * 1.6
+rangeHigh = weightKg * 2.2</code></pre>
+
+          <h3>Fat Loss And Recomposition</h3>
+          <p>
+            If body-fat percentage is supplied, the calculator uses lean-mass and adjusted-weight logic instead of relying only on total current body weight.
+          </p>
+          <pre><code>minimum = max(leanBodyMassKg * 2.0, adjustedBasisKg * 1.6)
+rangeLow = max(leanBodyMassKg * 2.1, adjustedBasisKg * 1.8)
+rangeHigh = max(leanBodyMassKg * 2.3, adjustedBasisKg * 2.0)</code></pre>
+
+          <p>
+            If target body-fat percentage is supplied, the adjusted basis is estimated goal weight. Otherwise, the adjusted basis is lean body mass.
+          </p>
+
+          <h3>Per-Meal Distribution</h3>
+          <pre><code>perMealProtein = defaultTarget / mealsPerDay</code></pre>
+          <p>
+            Per-meal output is a distribution aid. Total daily protein remains the main recommendation.
+          </p>
+        </section>
+
+        <section id="limits">
+          <h2>Limits Of The Estimate</h2>
+          <ul>
+            <li>Body-fat percentage is often estimated imprecisely.</li>
+            <li>Lean body mass is estimated, not measured.</li>
+            <li>Goal-weight estimates assume lean mass is preserved.</li>
+            <li>The calculator does not know actual calorie intake or deficit size.</li>
+            <li>Training frequency is a rough proxy for training volume and quality.</li>
+            <li>Protein quality, digestibility, leucine content, and dietary pattern are not directly modeled.</li>
+          </ul>
+        </section>
+
+        <section id="evidence">
+          <h2>Evidence Basis</h2>
+          <p>
+            The model is based on sports-nutrition position stands, systematic reviews, meta-analyses, and trials relevant to resistance training, lean-mass retention, and protein distribution.
+          </p>
+          <ul class="reference-list">
+            <li>
+              <p><strong>Citation:</strong> <cite>Jäger, R., Kerksick, C. M., Campbell, B. I., Cribb, P. J., Wells, S. D., Skwiat, T. M., Purpura, M., Ziegenfuss, T. N., Ferrando, A. A., Arent, S. M., Smith-Ryan, A. E., Stout, J. R., Arciero, P. J., Ormsbee, M. J., Taylor, L. W., Wilborn, C. D., Kalman, D. S., Kreider, R. B., Willoughby, D. S., ... Antonio, J. (2017). International Society of Sports Nutrition Position Stand: protein and exercise. <em>Journal of the International Society of Sports Nutrition, 14</em>, Article 20. <a href="https://doi.org/10.1186/s12970-017-0177-8">https://doi.org/10.1186/s12970-017-0177-8</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Broad resistance-training protein range.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Morton, R. W., Murphy, K. T., McKellar, S. R., Schoenfeld, B. J., Henselmans, M., Helms, E., Aragon, A. A., Devries, M. C., Banfield, L., Krieger, J. W., &amp; Phillips, S. M. (2018). A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. <em>British Journal of Sports Medicine, 52</em>(6), 376-384. <a href="https://doi.org/10.1136/bjsports-2017-097608">https://doi.org/10.1136/bjsports-2017-097608</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> 1.6 g/kg/day hypertrophy anchor.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Helms, E. R., Aragon, A. A., &amp; Fitschen, P. J. (2014). Evidence-based recommendations for natural bodybuilding contest preparation: nutrition and supplementation. <em>Journal of the International Society of Sports Nutrition, 11</em>, Article 20. <a href="https://doi.org/10.1186/1550-2783-11-20">https://doi.org/10.1186/1550-2783-11-20</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Lean-athlete cutting context, applied cautiously.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Helms, E. R., Zinn, C., Rowlands, D. S., &amp; Brown, S. R. (2014). A systematic review of dietary protein during caloric restriction in resistance trained lean athletes: a case for higher intakes. <em>International Journal of Sport Nutrition and Exercise Metabolism, 24</em>(2), 127-138. <a href="https://doi.org/10.1123/ijsnem.2013-0054">https://doi.org/10.1123/ijsnem.2013-0054</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Lean-mass scaling during caloric restriction.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Mettler, S., Mitchell, N., &amp; Tipton, K. D. (2010). Increased protein intake reduces lean body mass loss during weight loss in athletes. <em>Medicine &amp; Science in Sports &amp; Exercise, 42</em>(2), 326-337. <a href="https://doi.org/10.1249/MSS.0b013e3181b2ef8e">https://doi.org/10.1249/MSS.0b013e3181b2ef8e</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Higher protein during energy restriction.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Longland, T. M., Oikawa, S. Y., Mitchell, C. J., Devries, M. C., &amp; Phillips, S. M. (2016). Higher compared with lower dietary protein during an energy deficit combined with intense exercise promotes greater lean mass gain and fat mass loss: a randomized trial. <em>American Journal of Clinical Nutrition, 103</em>(3), 738-746. <a href="https://doi.org/10.3945/ajcn.115.119339">https://doi.org/10.3945/ajcn.115.119339</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Recomposition and fat-loss context.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Schoenfeld, B. J., &amp; Aragon, A. A. (2018). How much protein can the body use in a single meal for muscle-building? Implications for daily protein distribution. <em>Journal of the International Society of Sports Nutrition, 15</em>, Article 10. <a href="https://doi.org/10.1186/s12970-018-0215-1">https://doi.org/10.1186/s12970-018-0215-1</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Per-meal distribution context.</p>
+            </li>
+          </ul>
+        </section>
+
+        <section class="doc-disclaimer" aria-label="Medical disclaimer">
+          <h2>Disclaimer</h2>
+          <p>
+            This calculator is for educational purposes only. It is intended for generally healthy adults who perform resistance training. It is not medical advice and is not designed for kidney disease, pregnancy, adolescents, eating disorders, clinical nutrition, diagnosed medical conditions, or medically supervised weight loss. Consult a qualified clinician or registered dietitian for personal medical guidance.
+          </p>
+        </section>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Evidence-Based Resistance Training Protein Intake Calculator</title>
+    <meta
+      name="description"
+      content="A transparent protein intake calculator for healthy adults who perform resistance training."
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="content-wrap">
+        <h1>Evidence-Based Resistance Training Protein Intake Calculator</h1>
+        <p class="intro">
+          Estimate a daily protein target for resistance-training goals with the selected calculation basis shown.
+        </p>
+      </div>
+    </header>
+
+    <main class="content-wrap">
+      <noscript>
+        <div class="message-block error">
+          This calculator requires JavaScript to run in your browser.
+        </div>
+      </noscript>
+
+      <section class="tool-grid" aria-label="Protein calculator">
+        <form class="panel calculator-form" id="calculator-form" novalidate>
+          <div class="panel-heading">
+            <h2>Your Inputs</h2>
+            <p id="unit-system-note">Required fields are marked. Results show kg first; multipliers use kg internally.</p>
+          </div>
+
+          <fieldset class="field-group">
+            <legend>
+              <span class="label-row">
+                <span>Unit system</span>
+                <span class="requirement">Required</span>
+                <span class="info-tooltip" tabindex="0">?
+                  <span class="tooltip-text" role="tooltip">Choose how you want to enter height and weight. Scientific protein multipliers use kilograms internally.</span>
+                </span>
+              </span>
+            </legend>
+            <div class="segmented-control">
+              <label>
+                <input type="radio" name="unitSystem" value="metric" checked>
+                <span>Metric</span>
+              </label>
+              <label>
+                <input type="radio" name="unitSystem" value="imperial">
+                <span>Imperial</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="unit-fields" id="metric-fields">
+            <div class="field">
+              <label class="label-row" for="height-cm">
+                <span>Height</span>
+                <span class="requirement">Required</span>
+                <span class="info-tooltip" tabindex="0">?
+                  <span class="tooltip-text" role="tooltip">Used to calculate BMI and provide body-size context.</span>
+                </span>
+              </label>
+              <div class="input-with-unit">
+                <input id="height-cm" name="heightCm" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*">
+                <span>cm</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label-row" for="weight-kg">
+                <span>Current body weight</span>
+                <span class="requirement">Required</span>
+                <span class="info-tooltip" tabindex="0">?
+                  <span class="tooltip-text" role="tooltip">Used for BMI, body-composition estimates, and current-weight protein estimates.</span>
+                </span>
+              </label>
+              <div class="input-with-unit">
+                <input id="weight-kg" name="weightKg" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*">
+                <span>kg</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="unit-fields" id="imperial-fields" hidden>
+            <div class="field-row">
+              <div class="field">
+                <label class="label-row" for="height-feet">
+                  <span>Height</span>
+                  <span class="requirement">Required</span>
+                  <span class="info-tooltip" tabindex="0">?
+                    <span class="tooltip-text" role="tooltip">Used to calculate BMI and provide body-size context.</span>
+                  </span>
+                </label>
+                <div class="input-with-unit">
+                  <input id="height-feet" name="feet" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*">
+                  <span>ft</span>
+                </div>
+              </div>
+              <div class="field">
+                <label class="label-row" for="height-inches">
+                  <span>Inches</span>
+                  <span class="requirement optional">Optional</span>
+                </label>
+                <div class="input-with-unit">
+                  <input id="height-inches" name="inches" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*">
+                  <span>in</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label-row" for="weight-lb">
+                <span>Current body weight</span>
+                <span class="requirement">Required</span>
+                <span class="info-tooltip" tabindex="0">?
+                  <span class="tooltip-text" role="tooltip">Used for BMI, body-composition estimates, and current-weight protein estimates.</span>
+                </span>
+              </label>
+              <div class="input-with-unit">
+                <input id="weight-lb" name="weightLb" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*">
+                <span>lb</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label-row" for="body-fat">
+              <span>Body-fat percentage</span>
+              <span class="requirement optional">Optional</span>
+              <span class="field-note">Strongly Recommended</span>
+              <span class="info-tooltip" tabindex="0">?
+                <span class="tooltip-text" role="tooltip">Enables fat mass, lean body mass, and adjusted fat-loss or recomposition estimates. Leave blank for a reduced-precision result.</span>
+              </span>
+            </label>
+            <div class="input-with-unit">
+              <input id="body-fat" name="bodyFatPercent" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*">
+              <span>%</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label-row" for="goal">
+              <span>Goal</span>
+              <span class="requirement">Required</span>
+              <span class="info-tooltip" tabindex="0">?
+                <span class="tooltip-text" role="tooltip">Changes the protein basis and multiplier range used by the calculator.</span>
+              </span>
+            </label>
+            <select id="goal" name="goal">
+              <option value="">Select a goal</option>
+              <option value="maintenance">Maintenance while resistance training</option>
+              <option value="muscle_gain">Muscle gain/hypertrophy</option>
+              <option value="fat_loss">Fat loss while resistance training</option>
+              <option value="recomposition">Body recomposition</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="label-row" for="training-days">
+              <span>Resistance-training frequency</span>
+              <span class="requirement">Required</span>
+              <span class="info-tooltip" tabindex="0">?
+                <span class="tooltip-text" role="tooltip">Used as training context. Selecting 0-2 days/week still calculates a result with lower-confidence language.</span>
+              </span>
+            </label>
+            <select id="training-days" name="trainingDays">
+              <option value="">Select frequency</option>
+              <option value="0-2">0-2 days/week</option>
+              <option value="3-4">3-4 days/week</option>
+              <option value="5+">5+ days/week</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="label-row" for="target-body-fat">
+              <span>Target body-fat percentage</span>
+              <span class="requirement optional">Optional</span>
+              <span class="info-tooltip" tabindex="0">?
+                <span class="tooltip-text" role="tooltip">Estimates goal weight if current body fat is also supplied. Assumes lean mass is preserved.</span>
+              </span>
+            </label>
+            <div class="input-with-unit">
+              <input id="target-body-fat" name="targetBodyFatPercent" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*">
+              <span>%</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label-row" for="meals-per-day">
+              <span>Meals per day</span>
+              <span class="requirement optional">Optional</span>
+              <span class="info-tooltip" tabindex="0">?
+                <span class="tooltip-text" role="tooltip">Divides the default daily target across meals. Total daily protein remains the main recommendation.</span>
+              </span>
+            </label>
+            <input id="meals-per-day" name="mealsPerDay" type="text" inputmode="numeric" autocomplete="off" pattern="[0-9]*">
+          </div>
+
+          <div class="button-row">
+            <button class="primary-button" type="submit">Calculate protein target</button>
+          </div>
+        </form>
+
+        <section class="panel results-panel" aria-labelledby="results-heading">
+          <div class="panel-heading">
+            <h2 id="results-heading">Results</h2>
+            <p id="results-status" aria-live="polite">Enter inputs to calculate.</p>
+          </div>
+
+          <div id="messages" class="messages" aria-live="assertive"></div>
+
+          <div id="results-content" class="results-placeholder"></div>
+        </section>
+      </section>
+
+      <section class="methodology-summary" aria-labelledby="methodology-heading">
+        <div class="summary-content">
+          <h2 id="methodology-heading">Transparent Calculation</h2>
+          <p>
+            Recommendations are based on resistance-training protein literature. Fat-loss
+            and recomposition modes can use lean-mass or target-body-fat context when supplied.
+          </p>
+          <a class="text-link" href="calculation.html">Read the calculation method and citations</a>
+        </div>
+      </section>
+
+      <section class="disclaimer" aria-label="Medical disclaimer">
+        <p>
+          Educational use only for generally healthy adults who perform resistance training.
+          Not medical advice or a clinical nutrition tool. Consult a qualified clinician or
+          registered dietitian for personal medical guidance.
+        </p>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
