@@ -2,6 +2,13 @@
 
 const VALID_GOALS = ["maintenance", "muscle_gain", "fat_loss", "recomposition"];
 const VALID_TRAINING_DAYS = ["0-2", "3-4", "5+"];
+const THEME_STORAGE_KEY = "proteinCalculatorTheme";
+const THEME_MODES = ["light", "dark"];
+
+const THEME_LABELS = {
+  light: "Theme: Light",
+  dark: "Theme: Dark",
+};
 
 const GOAL_LABELS = {
   maintenance: "Maintenance while resistance training",
@@ -851,8 +858,81 @@ function setUnitVisibility(unitSystem) {
   }
 }
 
+function getSystemTheme() {
+  if (typeof window !== "undefined" && window.matchMedia) {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  return "light";
+}
+
+function readStoredTheme() {
+  try {
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+
+    if (THEME_MODES.includes(storedTheme)) {
+      return storedTheme;
+    }
+
+    if (storedTheme) {
+      localStorage.removeItem(THEME_STORAGE_KEY);
+    }
+  } catch (error) {}
+
+  return null;
+}
+
+function writeStoredTheme(theme) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (error) {}
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    button.textContent = THEME_LABELS[theme];
+    button.setAttribute("aria-label", `${THEME_LABELS[theme]}. Activate to switch to ${nextTheme} mode.`);
+    button.setAttribute("title", `${THEME_LABELS[theme]}. Click to switch to ${nextTheme} mode.`);
+  });
+
+  document.documentElement.dataset.themeControlsReady = "true";
+}
+
+function initThemeControls() {
+  let activeTheme = readStoredTheme() || getSystemTheme();
+  applyTheme(activeTheme);
+
+  const systemThemeQuery = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  if (systemThemeQuery) {
+    systemThemeQuery.addEventListener("change", () => {
+      if (readStoredTheme()) {
+        return;
+      }
+
+      activeTheme = getSystemTheme();
+      applyTheme(activeTheme);
+    });
+  }
+
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      activeTheme = activeTheme === "dark" ? "light" : "dark";
+      writeStoredTheme(activeTheme);
+      applyTheme(activeTheme);
+    });
+  });
+}
+
 function initCalculator() {
   const form = document.getElementById("calculator-form");
+
+  if (!form) {
+    return;
+  }
   const messages = document.getElementById("messages");
   const resultsContent = document.getElementById("results-content");
   const status = document.getElementById("results-status");
@@ -917,7 +997,10 @@ if (typeof window !== "undefined") {
 }
 
 if (typeof document !== "undefined") {
-  document.addEventListener("DOMContentLoaded", initCalculator);
+  document.addEventListener("DOMContentLoaded", () => {
+    initThemeControls();
+    initCalculator();
+  });
 }
 
 if (typeof module !== "undefined") {

@@ -2,6 +2,8 @@
 
 A small static calculator for estimating daily protein intake for generally healthy adults who perform resistance training and have body-composition goals.
 
+The interface starts from the user's system light or dark mode setting, with a persistent manual light/dark toggle.
+
 The calculator is intentionally narrow: it is not a full macro calculator, meal planner, clinical nutrition tool, or general sedentary-population protein calculator. It shows the calculation basis so users can see whether the estimate came from current body weight, lean-mass adjustment, or target-body-fat context.
 
 ## Live Demo

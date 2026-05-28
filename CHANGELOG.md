@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Initial plain HTML/CSS/JavaScript calculator for static GitHub Pages deployment.
 - Isolated pure `calculateProtein(input)` function for future portability.
 - Metric and imperial inputs with validation, comma-decimal parsing, and stable numeric entry without native number-input spinner behavior.
+- System-aware light and dark color modes using `prefers-color-scheme`, plus a persistent manual theme toggle.
 - Unit-aware result displays: metric users see kg with lb in parentheses, and imperial users see lb with kg in parentheses.
 - Optional body-fat percentage, target body-fat percentage, and meals-per-day inputs.
 - Required, optional, and strongly recommended field markers with keyboard-accessible help tooltips.

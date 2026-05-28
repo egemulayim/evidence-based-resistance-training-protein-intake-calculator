@@ -8,13 +8,36 @@
       name="description"
       content="Public explanation of the protein intake calculator method, assumptions, equations, and evidence basis."
     >
+    <script>
+      (() => {
+        let theme = null;
+
+        try {
+          const storedTheme = localStorage.getItem("proteinCalculatorTheme");
+          if (storedTheme === "light" || storedTheme === "dark") {
+            theme = storedTheme;
+          }
+        } catch (error) {}
+
+        if (!theme && window.matchMedia) {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+
+        document.documentElement.dataset.theme = theme || "light";
+      })();
+    </script>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
     <header class="site-header doc-header">
       <div class="content-wrap doc-wrap">
-        <a class="back-link" href="index.html">Back to calculator</a>
-        <h1>Calculation Method</h1>
+        <div class="header-tools">
+          <a class="back-link" href="index.html">Back to calculator</a>
+        </div>
+        <div class="title-row">
+          <h1>Calculation Method</h1>
+          <button class="theme-toggle" type="button" data-theme-toggle>Theme</button>
+        </div>
         <p class="intro">
           The calculator estimates a daily protein target for generally healthy adults who perform resistance training. It is educational, not medical advice.
         </p>
@@ -162,5 +185,6 @@ rangeHigh = max(leanBodyMassKg * 2.3, adjustedBasisKg * 2.0)</code></pre>
         </section>
       </article>
     </main>
+    <script src="script.js"></script>
   </body>
 </html>
