@@ -6,7 +6,7 @@ The calculator is intentionally narrow: it is not a full macro calculator, meal 
 
 ## Live Demo
 
-GitHub Pages URL: _to be added after deployment_
+GitHub Pages URL: https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/
 
 ## Repository Layout
 

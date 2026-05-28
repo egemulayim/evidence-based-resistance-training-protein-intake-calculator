@@ -18,4 +18,4 @@ All notable changes to this project will be documented in this file.
 - Calculation-choice explanations that account for selected unit system while preserving the scientific gram-per-kilogram basis.
 - Copy-to-clipboard, plain text export, and Markdown export for calculated results, using the same section order as the on-page results.
 - Compact methodology summary in the app, a public `calculation.html` method page with full citations and DOI links, and a Markdown calculation document in `docs/CALCULATION.md`.
-- README, MIT license, changelog, and public documentation structure.
+- README, MIT license, changelog, public documentation structure, and published GitHub Pages URL.
