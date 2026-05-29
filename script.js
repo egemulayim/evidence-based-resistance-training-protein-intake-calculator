@@ -2,6 +2,7 @@
 
 const VALID_GOALS = ["maintenance", "muscle_gain", "fat_loss", "recomposition"];
 const VALID_TRAINING_DAYS = ["0-2", "3-4", "5+"];
+const VALID_DIET_PHASES = ["recomposition_slight_deficit", "moderate_deficit", "aggressive_cut"];
 const THEME_STORAGE_KEY = "proteinCalculatorTheme";
 const THEME_MODES = ["light", "dark"];
 
@@ -15,6 +16,112 @@ const GOAL_LABELS = {
   muscle_gain: "Muscle gain/hypertrophy",
   fat_loss: "Fat loss while resistance training",
   recomposition: "Body recomposition",
+};
+
+const DIET_PHASE_LABELS = {
+  recomposition_slight_deficit: "Maintenance/slight deficit",
+  moderate_deficit: "Moderate deficit",
+  aggressive_cut: "Aggressive cut/lean athlete context",
+};
+
+const DIET_PHASES_BY_GOAL = {
+  fat_loss: ["moderate_deficit", "aggressive_cut"],
+  recomposition: ["recomposition_slight_deficit", "moderate_deficit"],
+};
+
+const DIET_PHASE_MODELS_BY_GOAL = {
+  fat_loss: {
+    moderate_deficit: {
+      label: DIET_PHASE_LABELS.moderate_deficit,
+      basisLabelWithoutGoalWeight: "Lean-mass-adjusted fat-loss basis",
+      basisLabelWithGoalWeight: "Composite lean-mass/goal-weight fat-loss basis",
+      lean: {
+        minimum: 2.0,
+        rangeLow: 2.1,
+        rangeHigh: 2.3,
+      },
+      adjusted: {
+        minimum: 1.6,
+        rangeLow: 1.8,
+        rangeHigh: 2.0,
+      },
+      currentWeightFallback: {
+        minimum: 1.6,
+        rangeLow: 1.7,
+        rangeHigh: 2.0,
+      },
+      evidenceSummary: "This phase keeps the original fat-loss model for users in a meaningful but not contest-prep-style deficit.",
+      multiplierSummary: "The practical range branches use 2.1-2.3 g/kg/day of lean mass and 1.8-2.0 g/kg/day of adjusted body weight.",
+    },
+    aggressive_cut: {
+      label: DIET_PHASE_LABELS.aggressive_cut,
+      basisLabelWithoutGoalWeight: "Lean-athlete aggressive-cut basis",
+      basisLabelWithGoalWeight: "Composite lean-athlete/goal-weight aggressive-cut basis",
+      lean: {
+        minimum: 2.3,
+        rangeLow: 2.3,
+        rangeHigh: 3.1,
+      },
+      adjusted: {
+        minimum: 1.8,
+        rangeLow: 2.0,
+        rangeHigh: 2.2,
+      },
+      currentWeightFallback: {
+        minimum: 1.8,
+        rangeLow: 2.0,
+        rangeHigh: 2.4,
+      },
+      evidenceSummary: "This phase is reserved for substantial energy restriction or lean resistance-trained users, reflecting physique-sport and lean-athlete literature rather than ordinary dieting.",
+      multiplierSummary: "The practical range branches use 2.3-3.1 g/kg/day of lean mass and 2.0-2.2 g/kg/day of adjusted body weight.",
+    },
+  },
+  recomposition: {
+    recomposition_slight_deficit: {
+      label: DIET_PHASE_LABELS.recomposition_slight_deficit,
+      basisLabelWithoutGoalWeight: "Lean-mass-adjusted recomposition basis",
+      basisLabelWithGoalWeight: "Composite lean-mass/goal-weight recomposition basis",
+      lean: {
+        minimum: 1.8,
+        rangeLow: 1.9,
+        rangeHigh: 2.2,
+      },
+      adjusted: {
+        minimum: 1.5,
+        rangeLow: 1.6,
+        rangeHigh: 1.8,
+      },
+      currentWeightFallback: {
+        minimum: 1.5,
+        rangeLow: 1.6,
+        rangeHigh: 2.0,
+      },
+      evidenceSummary: "This phase uses a lower recomposition-oriented model anchored near the resistance-training hypertrophy range, with a modest increase for lean-mass support.",
+      multiplierSummary: "The practical range branches use 1.9-2.2 g/kg/day of lean mass and 1.6-1.8 g/kg/day of adjusted body weight.",
+    },
+    moderate_deficit: {
+      label: DIET_PHASE_LABELS.moderate_deficit,
+      basisLabelWithoutGoalWeight: "Lean-mass-adjusted deficit recomposition basis",
+      basisLabelWithGoalWeight: "Composite lean-mass/goal-weight deficit recomposition basis",
+      lean: {
+        minimum: 1.9,
+        rangeLow: 2.0,
+        rangeHigh: 2.3,
+      },
+      adjusted: {
+        minimum: 1.6,
+        rangeLow: 1.7,
+        rangeHigh: 1.9,
+      },
+      currentWeightFallback: {
+        minimum: 1.6,
+        rangeLow: 1.7,
+        rangeHigh: 2.0,
+      },
+      evidenceSummary: "This phase allows a moderate deficit while keeping the model slightly below the dedicated fat-loss model because the selected goal still includes resistance-training adaptation.",
+      multiplierSummary: "The practical range branches use 2.0-2.3 g/kg/day of lean mass and 1.7-1.9 g/kg/day of adjusted body weight.",
+    },
+  },
 };
 
 const DISCLAIMER_TEXT = "This calculator is for educational purposes only. It is intended for generally healthy adults who perform resistance training. It is not medical advice and is not designed for kidney disease, pregnancy, adolescents, eating disorders, clinical nutrition, diagnosed medical conditions, or medically supervised weight loss. Consult a qualified clinician or registered dietitian for personal medical guidance.";
@@ -31,16 +138,28 @@ function parseOptionalNumber(value) {
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 
+function goalUsesDietPhase(goal) {
+  return goal === "fat_loss" || goal === "recomposition";
+}
+
+function goalUsesTargetBodyFat(goal) {
+  return goal === "fat_loss" || goal === "recomposition";
+}
+
 function roundToNearestFive(value) {
-  return Math.round(value / 5) * 5;
+  return Math.round(value/5) * 5;
 }
 
 function roundToOne(value) {
-  return Math.round(value * 10) / 10;
+  return Math.round(value * 10)/10;
 }
 
 function kgToLb(value) {
   return value * 2.20462;
+}
+
+function gPerKgToGPerLb(value) {
+  return Math.round((value/2.20462) * 100)/100;
 }
 
 function describeCurrentWeightBasis(unitSystem) {
@@ -75,19 +194,24 @@ function describeHypertrophyMultiplierHandling(unitSystem) {
   return "The central lower anchor is 1.6 g/kg/day, with a practical upper boundary of 2.2 g/kg/day.";
 }
 
-function describeAdjustedMultiplierHandling(unitSystem) {
+function describeAdjustedMultiplierHandling(unitSystem, phaseModel) {
   if (unitSystem === "imperial") {
-    return "For imperial interpretation, the practical range branches are roughly 0.95-1.04 g/lb/day of lean mass and 0.82-0.91 g/lb/day of adjusted body weight after conversion from the source g/kg/day multipliers.";
+    const leanLow = gPerKgToGPerLb(phaseModel.lean.rangeLow).toFixed(2);
+    const leanHigh = gPerKgToGPerLb(phaseModel.lean.rangeHigh).toFixed(2);
+    const adjustedLow = gPerKgToGPerLb(phaseModel.adjusted.rangeLow).toFixed(2);
+    const adjustedHigh = gPerKgToGPerLb(phaseModel.adjusted.rangeHigh).toFixed(2);
+
+    return `For imperial interpretation, the practical range branches are roughly ${leanLow}-${leanHigh} g/lb/day of lean mass and ${adjustedLow}-${adjustedHigh} g/lb/day of adjusted body weight after conversion from the source g/kg/day multipliers.`;
   }
 
-  return "The practical range branches use 2.1-2.3 g/kg/day of lean mass and 1.8-2.0 g/kg/day of adjusted body weight.";
+  return phaseModel.multiplierSummary;
 }
 
 function buildEstimate(label, basisKg, minimumMultiplier, lowMultiplier, highMultiplier) {
   const minimumRaw = basisKg * minimumMultiplier;
   const rangeLowRaw = basisKg * lowMultiplier;
   const rangeHighRaw = basisKg * highMultiplier;
-  const defaultRaw = (rangeLowRaw + rangeHighRaw) / 2;
+  const defaultRaw = (rangeLowRaw + rangeHighRaw)/2;
 
   return {
     label,
@@ -112,17 +236,27 @@ function buildEstimate(label, basisKg, minimumMultiplier, lowMultiplier, highMul
   };
 }
 
-function buildCompositeSelection(label, basisLabel, explanation, leanBodyMassKg, adjustedBasisKg) {
-  const minimumRaw = Math.max(leanBodyMassKg * 2.0, adjustedBasisKg * 1.6);
-  const rangeLowRaw = Math.max(leanBodyMassKg * 2.1, adjustedBasisKg * 1.8);
-  const rangeHighRaw = Math.max(leanBodyMassKg * 2.3, adjustedBasisKg * 2.0);
-  const defaultRaw = (rangeLowRaw + rangeHighRaw) / 2;
+function buildCompositeSelection(label, basisLabel, explanation, leanBodyMassKg, adjustedBasisKg, phaseModel) {
+  const minimumRaw = Math.max(
+    leanBodyMassKg * phaseModel.lean.minimum,
+    adjustedBasisKg * phaseModel.adjusted.minimum
+  );
+  const rangeLowRaw = Math.max(
+    leanBodyMassKg * phaseModel.lean.rangeLow,
+    adjustedBasisKg * phaseModel.adjusted.rangeLow
+  );
+  const rangeHighRaw = Math.max(
+    leanBodyMassKg * phaseModel.lean.rangeHigh,
+    adjustedBasisKg * phaseModel.adjusted.rangeHigh
+  );
+  const defaultRaw = (rangeLowRaw + rangeHighRaw)/2;
 
   return {
     label,
     basisLabel,
     explanation,
     basisKg: adjustedBasisKg,
+    phaseModel,
     raw: {
       minimum: minimumRaw,
       rangeLow: rangeLowRaw,
@@ -145,6 +279,14 @@ function calculateProtein(input) {
   const unitSystem = input.unitSystem;
   const goal = input.goal;
   const trainingDays = input.trainingDays;
+  const dietPhase = input.dietPhase;
+  const usesDietPhase = goalUsesDietPhase(goal);
+  const usesTargetBodyFat = goalUsesTargetBodyFat(goal);
+  const hasValidDietPhase = VALID_DIET_PHASES.includes(dietPhase);
+  const dietPhaseAllowedForGoal = usesDietPhase
+    && hasValidDietPhase
+    && DIET_PHASES_BY_GOAL[goal].includes(dietPhase);
+  const phaseModel = dietPhaseAllowedForGoal ? DIET_PHASE_MODELS_BY_GOAL[goal][dietPhase] : null;
 
   if (unitSystem !== "metric" && unitSystem !== "imperial") {
     errors.push("Choose metric or imperial units.");
@@ -156,6 +298,18 @@ function calculateProtein(input) {
 
   if (!VALID_TRAINING_DAYS.includes(trainingDays)) {
     errors.push("Choose resistance-training frequency.");
+  }
+
+  if (usesDietPhase && !hasValidDietPhase) {
+    errors.push("Choose diet phase intensity for fat-loss or recomposition goals.");
+  }
+
+  if (usesDietPhase && hasValidDietPhase && !dietPhaseAllowedForGoal) {
+    errors.push("Choose a diet phase intensity that matches the selected goal.");
+  }
+
+  if (!usesDietPhase && dietPhase && !hasValidDietPhase) {
+    errors.push("Choose a valid diet phase intensity.");
   }
 
   let heightM = null;
@@ -172,7 +326,7 @@ function calculateProtein(input) {
     } else if (Number.isNaN(heightCm) || heightCm < 100 || heightCm > 250) {
       errors.push("Height must be between 100 and 250 cm.");
     } else {
-      heightM = heightCm / 100;
+      heightM = heightCm/100;
       sourceHeight = { cm: heightCm };
     }
 
@@ -216,7 +370,7 @@ function calculateProtein(input) {
     }
 
     if (weightLb !== null && !Number.isNaN(weightLb)) {
-      weightKg = weightLb / 2.20462;
+      weightKg = weightLb/2.20462;
       sourceWeight = { lb: weightLb };
     }
   }
@@ -228,14 +382,21 @@ function calculateProtein(input) {
     if (Number.isNaN(bodyFatPercent) || bodyFatPercent < 3 || bodyFatPercent > 70) {
       errors.push("Body-fat percentage must be between 3 and 70.");
     }
-  } else {
+  } else if (usesDietPhase) {
     warnings.push("Body-fat percentage was not supplied. Lean-mass and adjusted-goal estimates are unavailable, so the result uses a reduced-precision current-weight basis.");
+  } else {
+    warnings.push("Body-fat percentage was not supplied. Body-composition context and lean-mass comparison are unavailable; the selected recommendation still uses current body weight for this goal.");
   }
 
-  const targetBodyFatPercent = parseOptionalNumber(input.targetBodyFatPercent);
+  const rawTargetBodyFatPercent = parseOptionalNumber(input.targetBodyFatPercent);
+  const targetBodyFatPercent = usesTargetBodyFat ? rawTargetBodyFatPercent : null;
   const hasTargetBodyFatPercent = targetBodyFatPercent !== null && !Number.isNaN(targetBodyFatPercent);
 
-  if (targetBodyFatPercent !== null) {
+  if (!usesTargetBodyFat && rawTargetBodyFatPercent !== null) {
+    warnings.push("Target body-fat percentage is only used for fat-loss and recomposition goals in version 1. Maintenance uses current body weight; muscle gain/bulking would also need target body weight or projected lean-mass gain before target body fat could drive a protein estimate.");
+  }
+
+  if (usesTargetBodyFat && targetBodyFatPercent !== null) {
     if (Number.isNaN(targetBodyFatPercent) || targetBodyFatPercent < 3 || targetBodyFatPercent > 60) {
       errors.push("Target body-fat percentage must be between 3 and 60.");
     } else if (targetBodyFatPercent < 8) {
@@ -256,6 +417,14 @@ function calculateProtein(input) {
     warnings.push("Training frequency is 0-2 days/week. The calculator can still estimate protein, but confidence is lower because it is designed primarily for consistent resistance training.");
   }
 
+  if (!usesDietPhase && hasValidDietPhase) {
+    warnings.push("Diet phase intensity is only used for fat-loss and recomposition goals. The selected goal uses its own current-weight model.");
+  }
+
+  if (usesDietPhase && dietPhase === "aggressive_cut" && !hasBodyFatPercent) {
+    warnings.push("Aggressive cut/lean athlete context works best with body-fat percentage supplied, because lean-mass scaling is central to that evidence base.");
+  }
+
   if (errors.length > 0) {
     return {
       ok: false,
@@ -264,18 +433,18 @@ function calculateProtein(input) {
     };
   }
 
-  const bmiRaw = weightKg / (heightM * heightM);
+  const bmiRaw = weightKg/(heightM * heightM);
   let fatMassKg = null;
   let leanBodyMassKg = null;
   let goalWeightKg = null;
 
   if (hasBodyFatPercent) {
-    fatMassKg = weightKg * (bodyFatPercent / 100);
+    fatMassKg = weightKg * (bodyFatPercent/100);
     leanBodyMassKg = weightKg - fatMassKg;
   }
 
   if (hasTargetBodyFatPercent && hasBodyFatPercent) {
-    goalWeightKg = leanBodyMassKg / (1 - (targetBodyFatPercent / 100));
+    goalWeightKg = leanBodyMassKg/(1 - (targetBodyFatPercent/100));
 
     if ((goal === "fat_loss" || goal === "recomposition") && targetBodyFatPercent >= bodyFatPercent) {
       warnings.push("The target body-fat percentage is equal to or higher than the current body-fat percentage, so the goal-weight calculation may not represent fat-loss progress.");
@@ -315,14 +484,32 @@ function calculateProtein(input) {
   }
 
   if (goal === "fat_loss" || goal === "recomposition") {
-    estimates.currentWeight = buildEstimate("Reduced-precision current-weight estimate", weightKg, 1.6, 1.6, 2.0);
+    estimates.currentWeight = buildEstimate(
+      "Reduced-precision current-weight estimate",
+      weightKg,
+      phaseModel.currentWeightFallback.minimum,
+      phaseModel.currentWeightFallback.rangeLow,
+      phaseModel.currentWeightFallback.rangeHigh
+    );
 
     if (hasBodyFatPercent) {
-      estimates.leanMass = buildEstimate("Lean-mass adjusted estimate", leanBodyMassKg, 2.0, 2.1, 2.3);
+      estimates.leanMass = buildEstimate(
+        "Lean-mass branch estimate",
+        leanBodyMassKg,
+        phaseModel.lean.minimum,
+        phaseModel.lean.rangeLow,
+        phaseModel.lean.rangeHigh
+      );
     }
 
     if (goalWeightKg !== null) {
-      estimates.goalWeight = buildEstimate("Goal-weight adjusted estimate", goalWeightKg, 1.6, 1.8, 2.0);
+      estimates.goalWeight = buildEstimate(
+        "Goal-weight branch estimate",
+        goalWeightKg,
+        phaseModel.adjusted.minimum,
+        phaseModel.adjusted.rangeLow,
+        phaseModel.adjusted.rangeHigh
+      );
     }
   }
 
@@ -331,7 +518,9 @@ function calculateProtein(input) {
   const adjustedBasisDescription = describeAdjustedBasis(unitSystem);
   const evidenceUnitDescription = describeEvidenceUnitHandling(unitSystem);
   const hypertrophyMultiplierDescription = describeHypertrophyMultiplierHandling(unitSystem);
-  const adjustedMultiplierDescription = describeAdjustedMultiplierHandling(unitSystem);
+  const adjustedMultiplierDescription = phaseModel
+    ? describeAdjustedMultiplierHandling(unitSystem, phaseModel)
+    : "";
 
   if (goal === "maintenance") {
     selected = {
@@ -353,36 +542,38 @@ function calculateProtein(input) {
     if (hasBodyFatPercent) {
       const adjustedBasisKg = goalWeightKg === null ? leanBodyMassKg : goalWeightKg;
       const basisLabel = goalWeightKg === null
-        ? "Lean-mass-adjusted basis"
-        : "Composite lean-mass / goal-weight adjusted basis";
+        ? phaseModel.basisLabelWithoutGoalWeight
+        : phaseModel.basisLabelWithGoalWeight;
       const explanation = goalWeightKg === null
-        ? `Because body-fat percentage was supplied, this calculator avoids relying only on total current body weight and uses ${adjustedBasisDescription}. ${adjustedMultiplierDescription}`
-        : `Because a target body-fat percentage was supplied, this calculator compares ${adjustedBasisDescription} to avoid inflating protein targets from fat mass. ${adjustedMultiplierDescription}`;
+        ? `Because body-fat percentage was supplied, this calculator avoids relying only on total current body weight and uses ${adjustedBasisDescription}. ${phaseModel.evidenceSummary} ${adjustedMultiplierDescription}`
+        : `Because a target body-fat percentage was supplied, this calculator compares ${adjustedBasisDescription} to avoid inflating protein targets from fat mass. ${phaseModel.evidenceSummary} ${adjustedMultiplierDescription}`;
 
       selected = buildCompositeSelection(
         goal === "fat_loss" ? "Selected fat-loss estimate" : "Selected recomposition estimate",
         basisLabel,
         explanation,
         leanBodyMassKg,
-        adjustedBasisKg
+        adjustedBasisKg,
+        phaseModel
       );
     } else {
       selected = {
         ...estimates.currentWeight,
         basisLabel: "Reduced-precision current-weight basis, because body-fat percentage was not supplied",
-        explanation: `Without body-fat percentage, lean-mass and adjusted-goal calculations are unavailable. The calculator falls back to a conservative range based on ${currentWeightBasisDescription}.`,
+        phaseModel,
+        explanation: `Without body-fat percentage, lean-mass and adjusted-goal calculations are unavailable. The calculator falls back to a reduced-precision current-weight range based on ${currentWeightBasisDescription}. ${phaseModel.evidenceSummary}`,
       };
     }
   }
 
   if (hasMealsPerDay) {
     selected.perMeal = {
-      rawDefault: selected.raw.defaultTarget / mealsPerDay,
-      rawRangeLow: selected.raw.rangeLow / mealsPerDay,
-      rawRangeHigh: selected.raw.rangeHigh / mealsPerDay,
-      displayDefault: roundToNearestFive(selected.raw.defaultTarget / mealsPerDay),
-      displayRangeLow: roundToNearestFive(selected.raw.rangeLow / mealsPerDay),
-      displayRangeHigh: roundToNearestFive(selected.raw.rangeHigh / mealsPerDay),
+      rawDefault: selected.raw.defaultTarget/mealsPerDay,
+      rawRangeLow: selected.raw.rangeLow/mealsPerDay,
+      rawRangeHigh: selected.raw.rangeHigh/mealsPerDay,
+      displayDefault: roundToNearestFive(selected.raw.defaultTarget/mealsPerDay),
+      displayRangeLow: roundToNearestFive(selected.raw.rangeLow/mealsPerDay),
+      displayRangeHigh: roundToNearestFive(selected.raw.rangeHigh/mealsPerDay),
       mealsPerDay,
     };
   }
@@ -395,9 +586,11 @@ function calculateProtein(input) {
       unitSystem,
       goal,
       goalLabel: GOAL_LABELS[goal],
+      dietPhase: usesDietPhase ? dietPhase : null,
+      dietPhaseLabel: usesDietPhase ? DIET_PHASE_LABELS[dietPhase] : null,
       trainingDays,
       bodyFatPercent: hasBodyFatPercent ? bodyFatPercent : null,
-      targetBodyFatPercent: hasTargetBodyFatPercent ? targetBodyFatPercent : null,
+      targetBodyFatPercent: usesTargetBodyFat && hasTargetBodyFatPercent ? targetBodyFatPercent : null,
       mealsPerDay: hasMealsPerDay ? mealsPerDay : null,
       sourceHeight,
       sourceWeight,
@@ -449,8 +642,8 @@ function formatPerMealRange(result) {
 }
 
 function formatFeetInchesFromMeters(heightM) {
-  const totalInches = heightM / 0.0254;
-  const feet = Math.floor(totalInches / 12);
+  const totalInches = heightM/0.0254;
+  const feet = Math.floor(totalInches/12);
   const inches = totalInches - (feet * 12);
   return `${feet} ft ${roundToOne(inches)} in`;
 }
@@ -473,8 +666,20 @@ function formatUnitSystemLabel(result) {
   return result.input.unitSystem === "imperial" ? "Imperial" : "Metric";
 }
 
+function formatDietPhase(result) {
+  return result.input.dietPhaseLabel || "Not used for this goal";
+}
+
 function optionalPercent(value) {
   return value === null ? "Not supplied" : `${roundToOne(value)}%`;
+}
+
+function formatTargetBodyFat(result) {
+  if (!goalUsesTargetBodyFat(result.input.goal)) {
+    return "Not used for this goal";
+  }
+
+  return optionalPercent(result.input.targetBodyFatPercent);
 }
 
 function reportEstimateRows(result) {
@@ -495,8 +700,9 @@ function buildTextReport(result) {
     `- Current body weight: ${formatInputWeight(result)}`,
     `- Body-fat percentage: ${optionalPercent(result.input.bodyFatPercent)}`,
     `- Goal: ${result.input.goalLabel}`,
+    `- Diet phase intensity: ${formatDietPhase(result)}`,
     `- Resistance-training frequency: ${result.input.trainingDays} days/week`,
-    `- Target body-fat percentage: ${optionalPercent(result.input.targetBodyFatPercent)}`,
+    `- Target body-fat percentage: ${formatTargetBodyFat(result)}`,
     `- Meals per day: ${result.input.mealsPerDay === null ? "Not supplied" : result.input.mealsPerDay}`,
     "",
     "Protein recommendation",
@@ -570,8 +776,9 @@ function buildMarkdownReport(result) {
     `- **Current body weight:** ${formatInputWeight(result)}`,
     `- **Body-fat percentage:** ${optionalPercent(result.input.bodyFatPercent)}`,
     `- **Goal:** ${result.input.goalLabel}`,
+    `- **Diet phase intensity:** ${formatDietPhase(result)}`,
     `- **Resistance-training frequency:** ${result.input.trainingDays} days/week`,
-    `- **Target body-fat percentage:** ${optionalPercent(result.input.targetBodyFatPercent)}`,
+    `- **Target body-fat percentage:** ${formatTargetBodyFat(result)}`,
     `- **Meals per day:** ${result.input.mealsPerDay === null ? "Not supplied" : result.input.mealsPerDay}`,
     "",
     "## Protein Recommendation",
@@ -752,6 +959,9 @@ function renderResults(result, container) {
     estimateRow(result.estimates.leanMass, result),
     estimateRow(result.estimates.goalWeight, result),
   ].join("");
+  const phaseContext = result.input.dietPhaseLabel
+    ? `<p><strong>Diet phase:</strong> ${result.input.dietPhaseLabel}</p>`
+    : "";
 
   container.className = "";
   container.innerHTML = `
@@ -813,6 +1023,7 @@ function renderResults(result, container) {
 
     <div class="section-block">
       <h3>Calculation choice</h3>
+      ${phaseContext}
       <p>${result.selected.explanation}</p>
       <p>The default target is the midpoint of the raw practical range, then rounded to the nearest 5 g. Range endpoints are also rounded to the nearest 5 g after the raw calculation.</p>
     </div>
@@ -837,6 +1048,7 @@ function getFormInput(form) {
     weightLb: formData.get("weightLb"),
     bodyFatPercent: formData.get("bodyFatPercent"),
     goal: formData.get("goal"),
+    dietPhase: formData.get("dietPhase"),
     trainingDays: formData.get("trainingDays"),
     targetBodyFatPercent: formData.get("targetBodyFatPercent"),
     mealsPerDay: formData.get("mealsPerDay"),
@@ -855,6 +1067,61 @@ function setUnitVisibility(unitSystem) {
     unitSystemNote.textContent = unitSystem === "imperial"
       ? "Required fields are marked. Results show lb first; multipliers use kg internally."
       : "Required fields are marked. Results show kg first; multipliers use kg internally.";
+  }
+}
+
+function setDietPhaseVisibility(goal) {
+  const dietPhaseField = document.getElementById("diet-phase-field");
+  const dietPhaseSelect = document.getElementById("diet-phase");
+
+  if (!dietPhaseField || !dietPhaseSelect) {
+    return;
+  }
+
+  const shouldShow = goalUsesDietPhase(goal);
+  dietPhaseField.hidden = !shouldShow;
+  dietPhaseSelect.disabled = !shouldShow;
+
+  if (!shouldShow) {
+    dietPhaseSelect.value = "";
+    return;
+  }
+
+  const allowedPhases = DIET_PHASES_BY_GOAL[goal] || [];
+
+  Array.from(dietPhaseSelect.options).forEach((option) => {
+    if (!option.value) {
+      option.hidden = false;
+      option.disabled = false;
+      option.style.display = "";
+      return;
+    }
+
+    const isAllowed = allowedPhases.includes(option.value);
+    option.hidden = !isAllowed;
+    option.disabled = !isAllowed;
+    option.style.display = isAllowed ? "" : "none";
+  });
+
+  if (!allowedPhases.includes(dietPhaseSelect.value)) {
+    dietPhaseSelect.value = "";
+  }
+}
+
+function setTargetBodyFatVisibility(goal) {
+  const targetBodyFatField = document.getElementById("target-body-fat-field");
+  const targetBodyFatInput = document.getElementById("target-body-fat");
+
+  if (!targetBodyFatField || !targetBodyFatInput) {
+    return;
+  }
+
+  const shouldShow = goalUsesTargetBodyFat(goal);
+  targetBodyFatField.hidden = !shouldShow;
+  targetBodyFatInput.disabled = !shouldShow;
+
+  if (!shouldShow) {
+    targetBodyFatInput.value = "";
   }
 }
 
@@ -938,10 +1205,20 @@ function initCalculator() {
   const status = document.getElementById("results-status");
   const resultsPanel = document.querySelector(".results-panel");
   const unitInputs = form.querySelectorAll('input[name="unitSystem"]');
+  const goalSelect = form.querySelector('select[name="goal"]');
 
   unitInputs.forEach((input) => {
     input.addEventListener("change", () => setUnitVisibility(input.value));
   });
+
+  if (goalSelect) {
+    setDietPhaseVisibility(goalSelect.value);
+    setTargetBodyFatVisibility(goalSelect.value);
+    goalSelect.addEventListener("change", () => {
+      setDietPhaseVisibility(goalSelect.value);
+      setTargetBodyFatVisibility(goalSelect.value);
+    });
+  }
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();

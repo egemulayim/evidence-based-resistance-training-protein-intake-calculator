@@ -79,17 +79,20 @@
         <section id="body-composition">
           <h2>Body-Composition Estimates</h2>
           <p>The calculator always estimates BMI:</p>
-          <pre><code>BMI = weightKg / (heightM * heightM)</code></pre>
+          <pre><code>BMI = weightKg/(heightM * heightM)</code></pre>
 
           <p>If body-fat percentage is supplied, it estimates fat mass and lean body mass:</p>
-          <pre><code>fatMassKg = weightKg * (bodyFatPercent / 100)
+          <pre><code>fatMassKg = weightKg * (bodyFatPercent/100)
 leanBodyMassKg = weightKg - fatMassKg</code></pre>
 
-          <p>If target body-fat percentage is supplied, it estimates goal weight while assuming lean mass is preserved:</p>
-          <pre><code>goalWeightKg = leanBodyMassKg / (1 - targetBodyFatPercent / 100)</code></pre>
+          <p>For fat-loss and recomposition goals only, if target body-fat percentage is supplied, the calculator estimates goal weight while assuming lean mass is preserved:</p>
+          <pre><code>goalWeightKg = leanBodyMassKg/(1 - targetBodyFatPercent/100)</code></pre>
 
           <p>
             This goal-weight estimate is not a prediction. It is only a simplified body-composition estimate.
+          </p>
+          <p>
+            Target body-fat percentage is not used for maintenance or muscle gain in version 1. Maintenance uses current body weight. Muscle gain/bulking would also need target body weight, projected lean-mass gain, or an expected fat:lean gain split before target body fat could drive a protein estimate.
           </p>
         </section>
 
@@ -103,26 +106,77 @@ leanBodyMassKg = weightKg - fatMassKg</code></pre>
           <pre><code>minimum = weightKg * 1.4
 rangeLow = weightKg * 1.6
 rangeHigh = weightKg * 2.0</code></pre>
+          <p>
+            If body-fat percentage is supplied, the calculator still shows fat mass, lean body mass, and lean-mass context. The selected maintenance target remains current-body-weight based.
+          </p>
+          <p>
+            Target body-fat percentage is not shown or used for maintenance because a changed body-fat target implies a body-composition change rather than maintenance.
+          </p>
 
-          <h3>Muscle Gain / Hypertrophy</h3>
+          <h3>Muscle Gain/Hypertrophy</h3>
           <pre><code>minimum = weightKg * 1.6
 rangeLow = weightKg * 1.6
 rangeHigh = weightKg * 2.2</code></pre>
+          <p>
+            If body-fat percentage is supplied, the calculator shows lean-mass context for interpretation. The selected hypertrophy target remains current-body-weight based.
+          </p>
+          <p>
+            Target body-fat percentage is not used for muscle gain in version 1. Bulking can include fat gain, but target body fat alone does not define future lean mass or final body weight.
+          </p>
 
           <h3>Fat Loss And Recomposition</h3>
           <p>
-            If body-fat percentage is supplied, the calculator uses lean-mass and adjusted-weight logic instead of relying only on total current body weight.
+            Fat-loss and recomposition goals use both goal and diet phase intensity. Fat loss is modeled with a stronger lean-retention bias. Recomposition is modeled slightly lower because the goal includes resistance-training adaptation and is usually closer to maintenance or a smaller deficit.
           </p>
+          <p>
+            If target body-fat percentage is supplied for a fat-loss or recomposition goal, the adjusted basis is estimated goal weight. Otherwise, the adjusted basis is lean body mass.
+          </p>
+
+          <h4>Fat Loss: Moderate Deficit</h4>
           <pre><code>minimum = max(leanBodyMassKg * 2.0, adjustedBasisKg * 1.6)
 rangeLow = max(leanBodyMassKg * 2.1, adjustedBasisKg * 1.8)
 rangeHigh = max(leanBodyMassKg * 2.3, adjustedBasisKg * 2.0)</code></pre>
 
+          <h4>Fat Loss: Aggressive Cut/Lean Athlete Context</h4>
+          <pre><code>minimum = max(leanBodyMassKg * 2.3, adjustedBasisKg * 1.8)
+rangeLow = max(leanBodyMassKg * 2.3, adjustedBasisKg * 2.0)
+rangeHigh = max(leanBodyMassKg * 3.1, adjustedBasisKg * 2.2)</code></pre>
+
+          <h4>Recomposition: Maintenance/Slight Deficit</h4>
+          <pre><code>minimum = max(leanBodyMassKg * 1.8, adjustedBasisKg * 1.5)
+rangeLow = max(leanBodyMassKg * 1.9, adjustedBasisKg * 1.6)
+rangeHigh = max(leanBodyMassKg * 2.2, adjustedBasisKg * 1.8)</code></pre>
+
+          <h4>Recomposition: Moderate Deficit</h4>
+          <pre><code>minimum = max(leanBodyMassKg * 1.9, adjustedBasisKg * 1.6)
+rangeLow = max(leanBodyMassKg * 2.0, adjustedBasisKg * 1.7)
+rangeHigh = max(leanBodyMassKg * 2.3, adjustedBasisKg * 1.9)</code></pre>
+
           <p>
-            If target body-fat percentage is supplied, the adjusted basis is estimated goal weight. Otherwise, the adjusted basis is lean body mass.
+            If body-fat percentage is missing, the calculator uses a reduced-precision current-weight fallback. Body-fat percentage is especially important for aggressive cutting because that model is based on lean-mass scaling.
           </p>
+          <pre><code>fat loss, moderate deficit:
+minimum = weightKg * 1.6
+rangeLow = weightKg * 1.7
+rangeHigh = weightKg * 2.0
+
+fat loss, aggressive cut/lean athlete:
+minimum = weightKg * 1.8
+rangeLow = weightKg * 2.0
+rangeHigh = weightKg * 2.4
+
+recomposition, maintenance/slight deficit:
+minimum = weightKg * 1.5
+rangeLow = weightKg * 1.6
+rangeHigh = weightKg * 2.0
+
+recomposition, moderate deficit:
+minimum = weightKg * 1.6
+rangeLow = weightKg * 1.7
+rangeHigh = weightKg * 2.0</code></pre>
 
           <h3>Per-Meal Distribution</h3>
-          <pre><code>perMealProtein = defaultTarget / mealsPerDay</code></pre>
+          <pre><code>perMealProtein = defaultTarget/mealsPerDay</code></pre>
           <p>
             Per-meal output is a distribution aid. Total daily protein remains the main recommendation.
           </p>
@@ -153,6 +207,10 @@ rangeHigh = max(leanBodyMassKg * 2.3, adjustedBasisKg * 2.0)</code></pre>
             <li>
               <p><strong>Citation:</strong> <cite>Morton, R. W., Murphy, K. T., McKellar, S. R., Schoenfeld, B. J., Henselmans, M., Helms, E., Aragon, A. A., Devries, M. C., Banfield, L., Krieger, J. W., &amp; Phillips, S. M. (2018). A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. <em>British Journal of Sports Medicine, 52</em>(6), 376-384. <a href="https://doi.org/10.1136/bjsports-2017-097608">https://doi.org/10.1136/bjsports-2017-097608</a></cite></p>
               <p class="source-use"><strong>Use in calculator:</strong> 1.6 g/kg/day hypertrophy anchor.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Iraki, J., Fitschen, P., Espinar, S., &amp; Helms, E. (2019). Nutrition recommendations for bodybuilders in the off-season: a narrative review. <em>Sports, 7</em>(7), Article 154. <a href="https://doi.org/10.3390/sports7070154">https://doi.org/10.3390/sports7070154</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Muscle-gain/bulking context, including controlled surplus, weight-gain rate, and body-composition monitoring.</p>
             </li>
             <li>
               <p><strong>Citation:</strong> <cite>Helms, E. R., Aragon, A. A., &amp; Fitschen, P. J. (2014). Evidence-based recommendations for natural bodybuilding contest preparation: nutrition and supplementation. <em>Journal of the International Society of Sports Nutrition, 11</em>, Article 20. <a href="https://doi.org/10.1186/1550-2783-11-20">https://doi.org/10.1186/1550-2783-11-20</a></cite></p>

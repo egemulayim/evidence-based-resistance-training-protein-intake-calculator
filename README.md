@@ -4,7 +4,7 @@ A small static calculator for estimating daily protein intake for generally heal
 
 The interface starts from the user's system light or dark mode setting, with a persistent manual light/dark toggle.
 
-The calculator is intentionally narrow: it is not a full macro calculator, meal planner, clinical nutrition tool, or general sedentary-population protein calculator. It shows the calculation basis so users can see whether the estimate came from current body weight, lean-mass adjustment, or target-body-fat context.
+The calculator is intentionally narrow: it is not a full macro calculator, meal planner, clinical nutrition tool, or general sedentary-population protein calculator. It shows the calculation basis so users can see whether the estimate came from current body weight, lean-mass adjustment, target-body-fat context, or diet phase intensity.
 
 ## Live Demo
 
@@ -48,8 +48,13 @@ Scientific multipliers use kilograms internally because the literature is expres
 
 - Maintenance: current body weight, using 1.4 g/kg/day minimum and a 1.6-2.0 g/kg/day practical range.
 - Muscle gain/hypertrophy: current body weight, using 1.6 g/kg/day minimum and a 1.6-2.2 g/kg/day practical range.
-- Fat loss and recomposition: lean-mass-adjusted logic when body-fat percentage is supplied, with optional goal-weight adjustment if target body-fat percentage is supplied.
-- If body-fat percentage is missing, the calculator falls back to current body weight and shows a reduced-precision warning.
+- Fat loss and recomposition: goal and diet phase intensity both control the multipliers.
+- Diet phase is hidden for maintenance and muscle-gain goals.
+- Diet phase options: fat loss uses moderate deficit or aggressive cut/lean athlete context; recomposition uses maintenance/slight deficit or moderate deficit.
+- Body-fat percentage provides fat-mass and lean-mass context for every goal.
+- Body-fat percentage also enables lean-mass-adjusted logic for fat-loss and recomposition goals, with optional goal-weight adjustment if target body-fat percentage is supplied.
+- Target body-fat percentage is shown only for fat-loss and recomposition goals. It is not used for maintenance or muscle gain/bulking in version 1 because the current goal-weight equation assumes lean mass is preserved, while a bulk would also need target body weight, projected lean-mass gain, or an expected fat:lean gain split.
+- If body-fat percentage is missing for fat-loss or recomposition goals, the calculator falls back to current body weight and shows a reduced-precision warning.
 - Displayed protein values are rounded to the nearest 5 g.
 
 For the public calculation rationale, see `calculation.html` in the static site or [docs/CALCULATION.md](docs/CALCULATION.md) in Markdown.

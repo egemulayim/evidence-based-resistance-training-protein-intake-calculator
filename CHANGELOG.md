@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2026-05-29
+
+### Changed
+
+- Added diet phase intensity for fat-loss and recomposition goals, with the field hidden for goals that do not use it.
+- Separated fat-loss and recomposition phase models so the same diet phase no longer produces identical results across those goals.
+- Removed maintenance/slight deficit from fat-loss phase options.
+- Fixed the conditional-field wiring so goal and body-fat percentage remain visible for all goals.
+- Updated public and developer calculation documentation to match the phase-based formulas.
+
 ## [0.1.0] - 2026-05-29
 
 ### Added
