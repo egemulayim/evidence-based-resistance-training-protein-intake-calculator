@@ -1251,7 +1251,7 @@ function initCalculator() {
     try {
       if (action === "copy") {
         await copyTextToClipboard(buildTextReport(latestResult));
-        setActionStatus("TXT results copied to clipboard.");
+        setActionStatus("Results copied to clipboard.");
       }
 
       if (action === "txt") {
