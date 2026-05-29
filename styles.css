@@ -347,6 +347,33 @@ h4 {
   margin-bottom: 18px;
 }
 
+.optional-panel {
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+}
+
+.optional-panel summary {
+  cursor: pointer;
+  color: var(--accent-dark);
+  font-weight: 800;
+}
+
+.optional-panel summary:focus-visible {
+  outline: 3px solid var(--focus-subtle);
+  outline-offset: 2px;
+}
+
+.optional-panel[open] summary {
+  margin-bottom: 14px;
+}
+
+.optional-panel .field:last-child {
+  margin-bottom: 0;
+}
+
 .field-row,
 .unit-fields {
   display: grid;
@@ -365,6 +392,11 @@ h4 {
 }
 
 #imperial-fields {
+  grid-template-columns: 1fr;
+}
+
+#known-lean-mass-metric-fields,
+#known-lean-mass-imperial-fields {
   grid-template-columns: 1fr;
 }
 
@@ -432,8 +464,8 @@ select:focus {
 
 input[aria-invalid="true"],
 select[aria-invalid="true"] {
-  border-color: var(--danger);
-  outline: 3px solid var(--danger-bg);
+  border-color: var(--error);
+  outline: 3px solid var(--error-bg);
 }
 
 .input-with-unit {

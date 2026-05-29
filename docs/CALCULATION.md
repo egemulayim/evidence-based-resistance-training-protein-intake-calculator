@@ -41,6 +41,16 @@ fatMassKg = weightKg * (bodyFatPercent/100)
 leanBodyMassKg = weightKg - fatMassKg
 ```
 
+If a user supplies a known lean body mass or fat-free mass value from a body-composition assessment, the calculator uses that value before the body-fat-percentage estimate for lean-mass-adjusted calculations:
+
+```text
+leanBodyMassKg = suppliedLeanBodyMassKg
+fatMassKg = weightKg - suppliedLeanBodyMassKg
+bodyFatPercentUsed = fatMassKg/weightKg * 100
+```
+
+The supplied value must be lower than current body weight and must imply a body-fat percentage between 3% and 70%. If both body-fat percentage and known lean body mass are supplied and they differ materially, the calculator warns the user and uses the supplied lean-mass value for adjusted calculations.
+
 For fat-loss and recomposition goals only, if target body-fat percentage is supplied, the calculator estimates a goal weight assuming lean mass is preserved:
 
 ```text
@@ -96,6 +106,10 @@ Target body-fat percentage is not used for muscle gain in version 1. Bulking can
 Fat-loss and recomposition goals use both goal and diet phase intensity. Fat loss is modeled with a stronger lean-retention bias. Recomposition is modeled slightly lower because the goal includes resistance-training adaptation and is usually closer to maintenance or a smaller deficit.
 
 If body-fat percentage is supplied, these modes use lean-mass and adjusted-weight logic rather than relying only on total current body weight.
+
+If known lean body mass is supplied, it is used as the lean-mass basis for these modes. This is useful when the user has a recent DXA/DXA, bioelectrical impedance, skinfold/caliper, or other body-composition assessment, but the number is still treated as an estimate because body-composition methods differ and are sensitive to measurement protocol, hydration, recent training, and device equations.
+
+The optional lean-mass source selector is for reporting and interpretation only. It records whether the supplied value came from DXA/DXA, BIA, skinfold/caliper assessment, or another method. It does not change the formula or multipliers. Only the supplied lean-mass number changes the calculation.
 
 If target body-fat percentage is supplied for a valid fat-loss or recomposition goal-weight estimate:
 
@@ -207,6 +221,7 @@ Important limitations:
 
 - body-fat percentage is often estimated imprecisely;
 - lean body mass is estimated, not measured;
+- user-supplied lean body mass can differ across DXA, BIA, skinfold/caliper, and other methods;
 - goal-weight estimates assume lean mass is preserved;
 - the calculator does not know actual calorie intake or deficit size;
 - training frequency is a rough proxy for training volume and quality;
@@ -235,6 +250,10 @@ Key sources include:
   **Use in calculator:** Recomposition and fat-loss context.
 - **Citation:** Schoenfeld, B. J., & Aragon, A. A. (2018). *How much protein can the body use in a single meal for muscle-building? Implications for daily protein distribution*. *Journal of the International Society of Sports Nutrition, 15*, Article 10. https://doi.org/10.1186/s12970-018-0215-1
   **Use in calculator:** Per-meal distribution context.
+- **Citation:** Refalo, M. C., Trexler, E. T., & Helms, E. R. (2025). *Effect of dietary protein on fat-free mass in energy restricted, resistance-trained individuals: An updated systematic review with meta-regression*. *Strength and Conditioning Journal*. https://doi.org/10.1519/SSC.0000000000000888
+  **Use in calculator:** Supports fat-free-mass scaling as relevant during energy restriction in resistance-trained users, while noting substantial heterogeneity.
+- **Citation:** Kasper, A. M., Langan-Evans, C., Hudson, J. F., et al. (2021). *Come back skinfolds, all is forgiven: A narrative review of the efficacy of common body composition methods in applied sports practice*. *Nutrients, 13*(4), 1075. https://doi.org/10.3390/nu13041075
+  **Use in calculator:** Body-composition measurement-method caveats for DXA, BIA, and skinfold/caliper-derived estimates.
 
 ## Disclaimer
 

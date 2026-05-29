@@ -50,6 +50,13 @@ test("index page links GitHub and scopes target body fat to fat loss/recomp", ()
   const html = read("index.html");
 
   assert.match(html, new RegExp(`<a class="back-link" href="${repoHref}" target="_blank" rel="noopener">GitHub</a>`));
+  assert.match(html, /<summary>Use known lean body mass<\/summary>/);
+  assert.match(html, /name="knownLeanMassKg"/);
+  assert.match(html, /name="knownLeanMassLb"/);
+  assert.match(html, /name="knownLeanMassMethod"/);
+  assert.match(html, /This value is used before body-fat percentage for adjusted estimates/);
+  assert.match(html, /<span class="field-note">Report Only<\/span>/);
+  assert.match(html, /It does not change the calculation/);
   assert.match(html, /<div class="field" id="target-body-fat-field" hidden>/);
   assert.match(html, /<span class="field-note">Fat Loss\/Recomp Only<\/span>/);
   assert.match(html, /id="target-body-fat"[^>]+disabled/);
@@ -75,6 +82,21 @@ test("public docs document target-body-fat scope and bulk-model requirements", (
     assert.match(contents, /target body weight/i);
     assert.match(contents, /projected lean-mass gain/i);
     assert.match(contents, /fat:lean gain split/i);
+  }
+});
+
+test("public docs document known lean-mass behavior and measurement caveats", () => {
+  const publicDocs = read("docs/CALCULATION.md");
+  const calculationPage = read("calculation.html");
+
+  for (const contents of [publicDocs, calculationPage]) {
+    assert.match(contents, /known lean body mass/i);
+    assert.match(contents, /DXA/i);
+    assert.match(contents, /BIA/i);
+    assert.match(contents, /skinfold/i);
+    assert.match(contents, /hydration/i);
+    assert.match(contents, /reporting and interpretation only/i);
+    assert.match(contents, /does not change the formula/i);
   }
 });
 

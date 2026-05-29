@@ -62,6 +62,7 @@ Scientific multipliers use kilograms internally because the literature is expres
 - Diet phase is hidden for maintenance and muscle-gain goals.
 - Diet phase options: fat loss uses moderate deficit or aggressive cut/lean athlete context; recomposition uses maintenance/slight deficit or moderate deficit.
 - Body-fat percentage provides fat-mass and lean-mass context for every goal.
+- Optional known lean body mass can be supplied from a body-composition assessment and is used before body-fat percentage for adjusted lean-mass calculations. The optional lean-mass source label is report-only and does not change the formula.
 - Body-fat percentage also enables lean-mass-adjusted logic for fat-loss and recomposition goals, with optional goal-weight adjustment if target body-fat percentage is supplied.
 - For fat loss, target body-fat percentage must be lower than current body-fat percentage. For recomposition, same-or-higher target body fat is not allowed to drive the goal-weight branch.
 - Target body-fat percentage is shown only for fat-loss and recomposition goals. It is not used for maintenance or muscle gain/bulking in version 1 because the current goal-weight equation assumes lean mass is preserved, while a bulk would also need target body weight, projected lean-mass gain, or an expected fat:lean gain split.

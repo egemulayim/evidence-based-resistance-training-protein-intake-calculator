@@ -167,6 +167,60 @@
             </div>
           </div>
 
+          <details class="optional-panel">
+            <summary>Use known lean body mass</summary>
+
+            <div class="unit-fields" id="known-lean-mass-metric-fields">
+              <div class="field">
+                <label class="label-row" for="known-lean-mass-kg">
+                  <span>Known lean body mass</span>
+                  <span class="requirement optional">Optional</span>
+                  <span class="info-tooltip" tabindex="0">?
+                    <span class="tooltip-text" role="tooltip">Use this if you have a lean-mass or fat-free-mass value from DXA, BIA, skinfolds, or another body-composition assessment. This value is used before body-fat percentage for adjusted estimates.</span>
+                  </span>
+                </label>
+                <div class="input-with-unit">
+                  <input id="known-lean-mass-kg" name="knownLeanMassKg" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*">
+                  <span>kg</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="unit-fields" id="known-lean-mass-imperial-fields" hidden>
+              <div class="field">
+                <label class="label-row" for="known-lean-mass-lb">
+                  <span>Known lean body mass</span>
+                  <span class="requirement optional">Optional</span>
+                  <span class="info-tooltip" tabindex="0">?
+                    <span class="tooltip-text" role="tooltip">Use this if you have a lean-mass or fat-free-mass value from DXA, BIA, skinfolds, or another body-composition assessment. This value is used before body-fat percentage for adjusted estimates.</span>
+                  </span>
+                </label>
+                <div class="input-with-unit">
+                  <input id="known-lean-mass-lb" name="knownLeanMassLb" type="text" inputmode="decimal" autocomplete="off" pattern="[0-9]*[.,]?[0-9]*">
+                  <span>lb</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label-row" for="known-lean-mass-method">
+                <span>Lean-mass source</span>
+                <span class="requirement optional">Optional</span>
+                <span class="field-note">Report Only</span>
+                <span class="info-tooltip" tabindex="0">?
+                  <span class="tooltip-text" role="tooltip">Records where the lean-mass value came from for exports and interpretation. It does not change the calculation; only the lean-mass number changes the result.</span>
+                </span>
+              </label>
+              <select id="known-lean-mass-method" name="knownLeanMassMethod">
+                <option value="">Not specified</option>
+                <option value="dxa">DEXA/DXA scan</option>
+                <option value="bia">Bioelectrical impedance analysis</option>
+                <option value="skinfold">Skinfold/caliper estimate</option>
+                <option value="other">Other measured estimate</option>
+              </select>
+            </div>
+          </details>
+
           <div class="field">
             <label class="label-row" for="goal">
               <span>Goal</span>

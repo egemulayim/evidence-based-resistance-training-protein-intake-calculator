@@ -86,6 +86,15 @@
           <pre><code>fatMassKg = weightKg * (bodyFatPercent/100)
 leanBodyMassKg = weightKg - fatMassKg</code></pre>
 
+          <p>If known lean body mass or fat-free mass is supplied from a body-composition assessment, the calculator uses that value before the body-fat-percentage estimate for lean-mass-adjusted calculations:</p>
+          <pre><code>leanBodyMassKg = suppliedLeanBodyMassKg
+fatMassKg = weightKg - suppliedLeanBodyMassKg
+bodyFatPercentUsed = fatMassKg/weightKg * 100</code></pre>
+
+          <p>
+            The supplied value must be lower than current body weight and must imply a body-fat percentage between 3% and 70%. If body-fat percentage and known lean body mass conflict materially, the calculator warns the user and uses the supplied lean-mass value for adjusted calculations.
+          </p>
+
           <p>For fat-loss and recomposition goals only, if target body-fat percentage is supplied, the calculator estimates goal weight while assuming lean mass is preserved:</p>
           <pre><code>goalWeightKg = leanBodyMassKg/(1 - targetBodyFatPercent/100)</code></pre>
 
@@ -134,6 +143,12 @@ rangeHigh = weightKg * 2.2</code></pre>
           </p>
           <p>
             If target body-fat percentage is supplied for a valid fat-loss or recomposition goal-weight estimate, the adjusted basis is estimated goal weight. Otherwise, the adjusted basis is lean body mass.
+          </p>
+          <p>
+            If known lean body mass is supplied, it is used as the lean-mass basis for these modes. DXA, BIA, skinfold/caliper, and other body-composition methods can differ and are sensitive to protocol, hydration, recent training, and device equations, so this value is still treated as an estimate.
+          </p>
+          <p>
+            The optional lean-mass source selector is for reporting and interpretation only. It records whether the supplied value came from DXA/DXA, BIA, skinfold/caliper assessment, or another method. It does not change the formula or multipliers. Only the supplied lean-mass number changes the calculation.
           </p>
 
           <h4>Fat Loss: Moderate Deficit</h4>
@@ -191,6 +206,7 @@ rangeHigh = weightKg * 2.0</code></pre>
           <ul>
             <li>Body-fat percentage is often estimated imprecisely.</li>
             <li>Lean body mass is estimated, not measured.</li>
+            <li>User-supplied lean body mass can differ across DXA, BIA, skinfold/caliper, and other methods.</li>
             <li>Goal-weight estimates assume lean mass is preserved.</li>
             <li>The calculator does not know actual calorie intake or deficit size.</li>
             <li>Training frequency is a rough proxy for training volume and quality.</li>
@@ -231,6 +247,14 @@ rangeHigh = weightKg * 2.0</code></pre>
             <li>
               <p><strong>Citation:</strong> <cite>Longland, T. M., Oikawa, S. Y., Mitchell, C. J., Devries, M. C., &amp; Phillips, S. M. (2016). Higher compared with lower dietary protein during an energy deficit combined with intense exercise promotes greater lean mass gain and fat mass loss: a randomized trial. <em>American Journal of Clinical Nutrition, 103</em>(3), 738-746. <a href="https://doi.org/10.3945/ajcn.115.119339">https://doi.org/10.3945/ajcn.115.119339</a></cite></p>
               <p class="source-use"><strong>Use in calculator:</strong> Recomposition and fat-loss context.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Refalo, M. C., Trexler, E. T., &amp; Helms, E. R. (2025). Effect of dietary protein on fat-free mass in energy restricted, resistance-trained individuals: An updated systematic review with meta-regression. <em>Strength and Conditioning Journal</em>. <a href="https://doi.org/10.1519/SSC.0000000000000888">https://doi.org/10.1519/SSC.0000000000000888</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Fat-free-mass scaling during energy restriction, with heterogeneity caveats.</p>
+            </li>
+            <li>
+              <p><strong>Citation:</strong> <cite>Kasper, A. M., Langan-Evans, C., Hudson, J. F., et al. (2021). Come back skinfolds, all is forgiven: A narrative review of the efficacy of common body composition methods in applied sports practice. <em>Nutrients, 13</em>(4), 1075. <a href="https://doi.org/10.3390/nu13041075">https://doi.org/10.3390/nu13041075</a></cite></p>
+              <p class="source-use"><strong>Use in calculator:</strong> Measurement-method caveats for DXA, BIA, and skinfold/caliper-derived estimates.</p>
             </li>
             <li>
               <p><strong>Citation:</strong> <cite>Schoenfeld, B. J., &amp; Aragon, A. A. (2018). How much protein can the body use in a single meal for muscle-building? Implications for daily protein distribution. <em>Journal of the International Society of Sports Nutrition, 15</em>, Article 10. <a href="https://doi.org/10.1186/s12970-018-0215-1">https://doi.org/10.1186/s12970-018-0215-1</a></cite></p>

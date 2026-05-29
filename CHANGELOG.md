@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.2] - 2026-05-30
+
+### Added
+
+- Added optional known lean body mass input, with a report-only source selector and adjusted calculation support for fat-loss and recomposition goals.
+- Added warnings for materially conflicting body-fat percentage and known lean body mass inputs.
+
+### Fixed
+
+- Fixed invalid-input styling by replacing undefined danger color variables with the existing error color tokens.
+
 ## [0.1.1] - 2026-05-29
 
 ### Changed

@@ -295,7 +295,7 @@ test("fat-loss/recomposition current-weight fallbacks are explicit when body fat
     });
 
     assertOk(result);
-    assert.equal(result.selected.basisLabel, "Reduced-precision current-weight basis, because body-fat percentage was not supplied");
+    assert.equal(result.selected.basisLabel, "Reduced-precision current-weight basis, because neither body-fat percentage nor known lean body mass was supplied");
     assertDisplay(result.selected.display, currentCase.display);
     assert.equal(result.estimates.leanMass, null);
     assert.equal(result.estimates.goalWeight, null);
@@ -318,7 +318,126 @@ test("target body fat without current body fat does not invent a goal weight", (
   assert.equal(result.input.targetBodyFatPercent, 20);
   assert.equal(result.body.goalWeightKg, null);
   assert.equal(result.estimates.goalWeight, null);
-  assert.match(result.warnings.join("\n"), /current body-fat percentage is needed/);
+  assert.match(result.warnings.join("\n"), /current body-fat percentage or known lean body mass is needed/);
+});
+
+test("known lean body mass supplies the adjusted basis when body-fat percentage is missing", () => {
+  const result = calculateProtein({
+    unitSystem: "metric",
+    heightCm: "181",
+    weightKg: "101",
+    knownLeanMassKg: "80",
+    knownLeanMassMethod: "dxa",
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    targetBodyFatPercent: "18",
+    trainingDays: "5+",
+  });
+
+  assertOk(result);
+  assert.equal(result.input.bodyFatPercent, null);
+  assert.equal(result.input.knownLeanMassKg, 80);
+  assert.equal(result.input.knownLeanMassMethod, "dxa");
+  assert.equal(result.body.leanMassSource, "known_lean_mass");
+  assert.equal(result.body.bodyFatPercentUsed, 20.8);
+  assert.equal(result.body.fatMassKg, 21);
+  assert.equal(result.body.leanBodyMassKg, 80);
+  assert.equal(result.body.goalWeightKg, 97.6);
+  assert.equal(result.selected.basisLabel, "User-provided lean-mass/goal-weight fat-loss basis");
+  assertDisplay(result.selected.display, {
+    minimum: 160,
+    rangeLow: 175,
+    rangeHigh: 195,
+    defaultTarget: 185,
+  });
+  assertDisplay(result.estimates.leanMass.display, {
+    minimum: 160,
+    rangeLow: 170,
+    rangeHigh: 185,
+    defaultTarget: 175,
+  });
+  assertDisplay(result.estimates.goalWeight.display, {
+    minimum: 155,
+    rangeLow: 175,
+    rangeHigh: 195,
+    defaultTarget: 185,
+  });
+  assert.match(result.warnings.join("\n"), /Known lean body mass was supplied/);
+});
+
+test("imperial known lean body mass is converted and used for recomposition", () => {
+  const result = calculateProtein({
+    unitSystem: "imperial",
+    feet: "5",
+    inches: "10",
+    weightLb: "180",
+    knownLeanMassLb: "140",
+    knownLeanMassMethod: "bia",
+    goal: "recomposition",
+    dietPhase: "moderate_deficit",
+    trainingDays: "3-4",
+  });
+
+  assertOk(result);
+  assert.equal(result.input.knownLeanMassKg.toFixed(1), "63.5");
+  assert.equal(result.input.knownLeanMassMethod, "bia");
+  assert.deepEqual(result.input.sourceKnownLeanMass, { lb: 140 });
+  assert.equal(result.body.bodyFatPercentUsed, 22.2);
+  assert.equal(result.selected.basisLabel, "User-provided lean-mass deficit recomposition basis");
+  assertDisplay(result.selected.display, {
+    minimum: 120,
+    rangeLow: 125,
+    rangeHigh: 145,
+    defaultTarget: 135,
+  });
+});
+
+test("known lean body mass conflict warning prefers the supplied lean mass", () => {
+  const result = calculate({
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    knownLeanMassKg: "60",
+  });
+
+  assertOk(result);
+  assert.equal(result.input.bodyFatPercent, 26);
+  assert.equal(result.body.leanBodyMassKg, 60);
+  assert.equal(result.body.bodyFatPercentUsed, 40.6);
+  assert.equal(result.selected.basisLabel, "User-provided lean-mass fat-loss basis");
+  assertDisplay(result.selected.display, {
+    minimum: 120,
+    rangeLow: 125,
+    rangeHigh: 140,
+    defaultTarget: 130,
+  });
+  assert.match(result.warnings.join("\n"), /differs from the body-fat-percentage estimate/);
+  assert.match(result.warnings.join("\n"), /uses the known lean-mass value/);
+});
+
+test("known lean body mass must be plausible relative to current body weight", () => {
+  const tooHigh = calculateProtein({
+    unitSystem: "metric",
+    heightCm: "181",
+    weightKg: "101",
+    knownLeanMassKg: "101",
+    goal: "maintenance",
+    trainingDays: "3-4",
+  });
+
+  assert.equal(tooHigh.ok, false);
+  assert.match(tooHigh.errors.join("\n"), /lower than current body weight/);
+
+  const implausible = calculateProtein({
+    unitSystem: "metric",
+    heightCm: "181",
+    weightKg: "101",
+    knownLeanMassKg: "20",
+    goal: "maintenance",
+    trainingDays: "3-4",
+  });
+
+  assert.equal(implausible.ok, false);
+  assert.match(implausible.errors.join("\n"), /imply a body-fat percentage between 3 and 70/);
 });
 
 test("fat loss rejects target body fat that is not lower than current body fat", () => {
@@ -361,6 +480,18 @@ test("target body-fat relationship notice supports immediate form feedback", () 
     errors: [],
     warnings: [],
     invalidTargetBodyFat: false,
+  });
+
+  assert.deepEqual(getTargetBodyFatRelationshipNotice({
+    unitSystem: "metric",
+    weightKg: "101",
+    knownLeanMassKg: "80",
+    goal: "fat_loss",
+    targetBodyFatPercent: "22",
+  }), {
+    errors: ["For fat loss, target body-fat percentage must be lower than current body-fat percentage."],
+    warnings: [],
+    invalidTargetBodyFat: true,
   });
 });
 
@@ -448,4 +579,25 @@ test("reports include goal-weight context when target body fat is valid for fat 
   assert.match(textReport, /Goal-weight estimate: 93.4 kg/);
   assert.match(markdownReport, /Target body-fat percentage:\*\* 20%/);
   assert.match(markdownReport, /Goal-weight estimate:\*\* 93.4 kg/);
+});
+
+test("reports include known lean body mass context when supplied", () => {
+  const result = calculateProtein({
+    unitSystem: "metric",
+    heightCm: "181",
+    weightKg: "101",
+    knownLeanMassKg: "80",
+    knownLeanMassMethod: "dxa",
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    trainingDays: "5+",
+  });
+  const textReport = buildTextReport(result);
+  const markdownReport = buildMarkdownReport(result);
+
+  assert.match(textReport, /Known lean body mass: 80 kg/);
+  assert.match(textReport, /Known lean-mass source \(report only\): DEXA\/DXA scan/);
+  assert.match(textReport, /Lean-mass source: User-provided known lean body mass/);
+  assert.match(markdownReport, /Known lean body mass:\*\* 80 kg/);
+  assert.match(markdownReport, /Known lean-mass source \(report only\):\*\* DEXA\/DXA scan/);
 });
