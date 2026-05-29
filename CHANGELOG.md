@@ -8,10 +8,12 @@ All notable changes to this project will be documented in this file.
 
 - Added optional known lean body mass input, with a report-only source selector and adjusted calculation support for fat-loss and recomposition goals.
 - Added warnings for materially conflicting body-fat percentage and known lean body mass inputs.
+- Added an optional custom source-name field for the report-only "other measured estimate" lean-mass source.
 
 ### Fixed
 
 - Fixed invalid-input styling by replacing undefined danger color variables with the existing error color tokens.
+- Removed the generic known-lean-mass estimate caveat from warning notes.
 
 ## [0.1.1] - 2026-05-29
 

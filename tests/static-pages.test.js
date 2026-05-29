@@ -54,6 +54,8 @@ test("index page links GitHub and scopes target body fat to fat loss/recomp", ()
   assert.match(html, /name="knownLeanMassKg"/);
   assert.match(html, /name="knownLeanMassLb"/);
   assert.match(html, /name="knownLeanMassMethod"/);
+  assert.match(html, /id="known-lean-mass-custom-method-field" hidden/);
+  assert.match(html, /name="knownLeanMassCustomMethod"/);
   assert.match(html, /This value is used before body-fat percentage for adjusted estimates/);
   assert.match(html, /<span class="field-note">Report Only<\/span>/);
   assert.match(html, /It does not change the calculation/);
@@ -96,7 +98,8 @@ test("public docs document known lean-mass behavior and measurement caveats", ()
     assert.match(contents, /skinfold/i);
     assert.match(contents, /hydration/i);
     assert.match(contents, /reporting and interpretation only/i);
-    assert.match(contents, /does not change the formula/i);
+    assert.match(contents, /do not change the formula|does not change the formula/i);
+    assert.match(contents, /custom name/i);
   }
 });
 

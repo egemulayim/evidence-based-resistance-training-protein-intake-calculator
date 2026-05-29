@@ -362,7 +362,39 @@ test("known lean body mass supplies the adjusted basis when body-fat percentage 
     rangeHigh: 195,
     defaultTarget: 185,
   });
-  assert.match(result.warnings.join("\n"), /Known lean body mass was supplied/);
+  assert.doesNotMatch(result.warnings.join("\n"), /Known lean body mass was supplied/);
+});
+
+test("custom other lean-mass source is report-only and does not change output", () => {
+  const sourceOnly = calculateProtein({
+    unitSystem: "metric",
+    heightCm: "181",
+    weightKg: "101",
+    knownLeanMassKg: "80",
+    knownLeanMassMethod: "other",
+    knownLeanMassCustomMethod: "Bod Pod",
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    trainingDays: "5+",
+  });
+  const noCustomSource = calculateProtein({
+    unitSystem: "metric",
+    heightCm: "181",
+    weightKg: "101",
+    knownLeanMassKg: "80",
+    knownLeanMassMethod: "other",
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    trainingDays: "5+",
+  });
+
+  assertOk(sourceOnly);
+  assertOk(noCustomSource);
+  assert.equal(sourceOnly.input.knownLeanMassMethod, "other");
+  assert.equal(sourceOnly.input.knownLeanMassCustomMethod, "Bod Pod");
+  assert.deepEqual(sourceOnly.selected.display, noCustomSource.selected.display);
+  assert.match(buildTextReport(sourceOnly), /Known lean-mass source \(report only\): Other measured estimate: Bod Pod/);
+  assert.match(buildMarkdownReport(sourceOnly), /Known lean-mass source \(report only\):\*\* Other measured estimate: Bod Pod/);
 });
 
 test("imperial known lean body mass is converted and used for recomposition", () => {

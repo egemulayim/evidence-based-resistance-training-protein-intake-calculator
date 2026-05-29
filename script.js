@@ -157,6 +157,15 @@ function parseOptionalNumber(value) {
   return Number.isFinite(parsed) ? parsed : NaN;
 }
 
+function parseOptionalText(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  const normalized = String(value).replace(/\s+/g, " ").trim();
+  return normalized === "" ? null : normalized;
+}
+
 function goalUsesDietPhase(goal) {
   return goal === "fat_loss" || goal === "recomposition";
 }
@@ -287,6 +296,16 @@ function gPerKgToGPerLb(value) {
 
 function formatLeanMassMethod(method) {
   return LEAN_MASS_METHOD_LABELS[method] || "Not specified";
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  })[character]);
 }
 
 function calculateImpliedBodyFatPercent(weightKg, leanBodyMassKg) {
@@ -531,6 +550,15 @@ function calculateProtein(input) {
     errors.push("Choose a valid known lean-mass source.");
   }
 
+  const knownLeanMassCustomMethodInput = parseOptionalText(input.knownLeanMassCustomMethod);
+  const knownLeanMassCustomMethod = knownLeanMassMethod === "other"
+    ? knownLeanMassCustomMethodInput
+    : null;
+
+  if (knownLeanMassCustomMethod !== null && knownLeanMassCustomMethod.length > 80) {
+    errors.push("Custom lean-mass source name must be 80 characters or fewer.");
+  }
+
   const rawKnownLeanMass = unitSystem === "imperial"
     ? parseOptionalNumber(input.knownLeanMassLb)
     : parseOptionalNumber(input.knownLeanMassKg);
@@ -579,17 +607,13 @@ function calculateProtein(input) {
     }
   }
 
-  if (hasKnownLeanMass) {
-    warnings.push("Known lean body mass was supplied. Treat it as an estimate; DXA, BIA, and skinfold methods can differ and are sensitive to protocol, hydration, recent training, and measurement conditions.");
+  if (hasKnownLeanMass && hasBodyFatPercent) {
+    const leanMassFromBodyFatKg = weightKg * (1 - (bodyFatPercent/100));
+    const leanMassDifferenceKg = Math.abs(knownLeanMassKg - leanMassFromBodyFatKg);
+    const conflictThresholdKg = getLeanMassConflictThreshold(weightKg);
 
-    if (hasBodyFatPercent) {
-      const leanMassFromBodyFatKg = weightKg * (1 - (bodyFatPercent/100));
-      const leanMassDifferenceKg = Math.abs(knownLeanMassKg - leanMassFromBodyFatKg);
-      const conflictThresholdKg = getLeanMassConflictThreshold(weightKg);
-
-      if (leanMassDifferenceKg > conflictThresholdKg) {
-        warnings.push(`Known lean body mass differs from the body-fat-percentage estimate by about ${roundToOne(leanMassDifferenceKg)} kg. The calculator uses the known lean-mass value for adjusted calculations.`);
-      }
+    if (leanMassDifferenceKg > conflictThresholdKg) {
+      warnings.push(`Known lean body mass differs from the body-fat-percentage estimate by about ${roundToOne(leanMassDifferenceKg)} kg. The calculator uses the known lean-mass value for adjusted calculations.`);
     }
   }
 
@@ -646,8 +670,8 @@ function calculateProtein(input) {
     warnings.push("Diet phase intensity is only used for fat-loss and recomposition goals. The selected goal uses its own current-weight model.");
   }
 
-  if (usesDietPhase && dietPhase === "aggressive_cut" && !hasBodyFatPercent) {
-    warnings.push("Aggressive cut/lean athlete context works best with body-fat percentage supplied, because lean-mass scaling is central to that evidence base.");
+  if (usesDietPhase && dietPhase === "aggressive_cut" && !hasBodyFatPercent && !hasKnownLeanMass) {
+    warnings.push("Aggressive cut/lean athlete context works best with body-fat percentage or known lean body mass supplied, because lean-mass scaling is central to that evidence base.");
   }
 
   if (errors.length > 0) {
@@ -842,6 +866,7 @@ function calculateProtein(input) {
       bodyFatPercent: hasBodyFatPercent ? bodyFatPercent : null,
       knownLeanMassKg: hasKnownLeanMass ? knownLeanMassKg : null,
       knownLeanMassMethod: hasKnownLeanMass ? knownLeanMassMethod : null,
+      knownLeanMassCustomMethod: hasKnownLeanMass ? knownLeanMassCustomMethod : null,
       targetBodyFatPercent: usesTargetBodyFat && hasTargetBodyFatPercent ? targetBodyFatPercent : null,
       mealsPerDay: hasMealsPerDay ? mealsPerDay : null,
       sourceHeight,
@@ -950,6 +975,10 @@ function formatKnownLeanMassMethod(result) {
     return "Not supplied";
   }
 
+  if (result.input.knownLeanMassMethod === "other" && result.input.knownLeanMassCustomMethod) {
+    return `Other measured estimate: ${result.input.knownLeanMassCustomMethod}`;
+  }
+
   return formatLeanMassMethod(result.input.knownLeanMassMethod);
 }
 
@@ -1004,6 +1033,9 @@ function buildTextReport(result) {
   if (result.body.fatMassKg !== null) {
     lines.push(`- Body-fat percentage used: ${optionalPercent(result.body.bodyFatPercentUsed)}`);
     lines.push(`- Lean-mass source: ${formatLeanMassSource(result)}`);
+    if (result.body.leanMassSource === "known_lean_mass") {
+      lines.push(`- Known lean-mass source (report only): ${formatKnownLeanMassMethod(result)}`);
+    }
     lines.push(`- ${result.body.leanMassSource === "known_lean_mass" ? "Derived fat mass" : "Estimated fat mass"}: ${formatWeightForUser(result, result.body.fatMassKg)}`);
     lines.push(`- ${result.body.leanMassSource === "known_lean_mass" ? "Known lean body mass" : "Estimated lean body mass"}: ${formatWeightForUser(result, result.body.leanBodyMassKg)}`);
   }
@@ -1086,6 +1118,9 @@ function buildMarkdownReport(result) {
   if (result.body.fatMassKg !== null) {
     lines.push(`- **Body-fat percentage used:** ${optionalPercent(result.body.bodyFatPercentUsed)}`);
     lines.push(`- **Lean-mass source:** ${formatLeanMassSource(result)}`);
+    if (result.body.leanMassSource === "known_lean_mass") {
+      lines.push(`- **Known lean-mass source (report only):** ${formatKnownLeanMassMethod(result)}`);
+    }
     lines.push(`- **${result.body.leanMassSource === "known_lean_mass" ? "Derived fat mass" : "Estimated fat mass"}:** ${formatWeightForUser(result, result.body.fatMassKg)}`);
     lines.push(`- **${result.body.leanMassSource === "known_lean_mass" ? "Known lean body mass" : "Estimated lean body mass"}:** ${formatWeightForUser(result, result.body.leanBodyMassKg)}`);
   }
@@ -1254,6 +1289,9 @@ function renderResults(result, container) {
   if (result.body.fatMassKg !== null) {
     bodyRows.push(["Body-fat percentage used", optionalPercent(result.body.bodyFatPercentUsed)]);
     bodyRows.push(["Lean-mass source", formatLeanMassSource(result)]);
+    if (result.body.leanMassSource === "known_lean_mass") {
+      bodyRows.push(["Known lean-mass source (report only)", formatKnownLeanMassMethod(result)]);
+    }
     bodyRows.push([
       result.body.leanMassSource === "known_lean_mass" ? "Derived fat mass" : "Estimated fat mass",
       formatWeightForUser(result, result.body.fatMassKg),
@@ -1307,8 +1345,8 @@ function renderResults(result, container) {
       <dl class="definition-list">
         ${bodyRows.map(([term, value]) => `
           <div class="definition-row">
-            <dt>${term}</dt>
-            <dd>${value}</dd>
+            <dt>${escapeHtml(term)}</dt>
+            <dd>${escapeHtml(value)}</dd>
           </div>
         `).join("")}
       </dl>
@@ -1366,6 +1404,7 @@ function getFormInput(form) {
     knownLeanMassKg: formData.get("knownLeanMassKg"),
     knownLeanMassLb: formData.get("knownLeanMassLb"),
     knownLeanMassMethod: formData.get("knownLeanMassMethod"),
+    knownLeanMassCustomMethod: formData.get("knownLeanMassCustomMethod"),
     goal: formData.get("goal"),
     dietPhase: formData.get("dietPhase"),
     trainingDays: formData.get("trainingDays"),
@@ -1453,6 +1492,23 @@ function setTargetBodyFatVisibility(goal) {
   }
 }
 
+function setKnownLeanMassCustomMethodVisibility(method) {
+  const customMethodField = document.getElementById("known-lean-mass-custom-method-field");
+  const customMethodInput = document.getElementById("known-lean-mass-custom-method");
+
+  if (!customMethodField || !customMethodInput) {
+    return;
+  }
+
+  const shouldShow = method === "other";
+  customMethodField.hidden = !shouldShow;
+  customMethodInput.disabled = !shouldShow;
+
+  if (!shouldShow) {
+    customMethodInput.value = "";
+  }
+}
+
 function getSystemTheme() {
   if (typeof window !== "undefined" && window.matchMedia) {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -1534,7 +1590,8 @@ function initCalculator() {
   const resultsPanel = document.querySelector(".results-panel");
   const unitInputs = form.querySelectorAll('input[name="unitSystem"]');
   const goalSelect = form.querySelector('select[name="goal"]');
-  const immediateValidationFields = form.querySelectorAll('select[name="goal"], input[name="weightKg"], input[name="weightLb"], input[name="bodyFatPercent"], input[name="knownLeanMassKg"], input[name="knownLeanMassLb"], input[name="targetBodyFatPercent"]');
+  const knownLeanMassMethodSelect = form.querySelector('select[name="knownLeanMassMethod"]');
+  const immediateValidationFields = form.querySelectorAll('select[name="goal"], select[name="knownLeanMassMethod"], input[name="weightKg"], input[name="weightLb"], input[name="bodyFatPercent"], input[name="knownLeanMassKg"], input[name="knownLeanMassLb"], input[name="knownLeanMassCustomMethod"], input[name="targetBodyFatPercent"]');
 
   unitInputs.forEach((input) => {
     input.addEventListener("change", () => {
@@ -1549,6 +1606,14 @@ function initCalculator() {
     goalSelect.addEventListener("change", () => {
       setDietPhaseVisibility(goalSelect.value);
       setTargetBodyFatVisibility(goalSelect.value);
+      renderImmediateInputMessages(form, messages);
+    });
+  }
+
+  if (knownLeanMassMethodSelect) {
+    setKnownLeanMassCustomMethodVisibility(knownLeanMassMethodSelect.value);
+    knownLeanMassMethodSelect.addEventListener("change", () => {
+      setKnownLeanMassCustomMethodVisibility(knownLeanMassMethodSelect.value);
       renderImmediateInputMessages(form, messages);
     });
   }

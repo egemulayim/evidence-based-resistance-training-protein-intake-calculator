@@ -109,7 +109,7 @@ If body-fat percentage is supplied, these modes use lean-mass and adjusted-weigh
 
 If known lean body mass is supplied, it is used as the lean-mass basis for these modes. This is useful when the user has a recent DXA/DXA, bioelectrical impedance, skinfold/caliper, or other body-composition assessment, but the number is still treated as an estimate because body-composition methods differ and are sensitive to measurement protocol, hydration, recent training, and device equations.
 
-The optional lean-mass source selector is for reporting and interpretation only. It records whether the supplied value came from DXA/DXA, BIA, skinfold/caliper assessment, or another method. It does not change the formula or multipliers. Only the supplied lean-mass number changes the calculation.
+The optional lean-mass source selector is for reporting and interpretation only. It records whether the supplied value came from DXA/DXA, BIA, skinfold/caliper assessment, or another method. If "other measured estimate" is selected, the user can optionally enter a custom name for that source. The source label and custom name do not change the formula or multipliers. Only the supplied lean-mass number changes the calculation.
 
 If target body-fat percentage is supplied for a valid fat-loss or recomposition goal-weight estimate:
 
