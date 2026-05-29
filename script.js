@@ -393,7 +393,13 @@ function calculateProtein(input) {
   const hasTargetBodyFatPercent = targetBodyFatPercent !== null && !Number.isNaN(targetBodyFatPercent);
 
   if (!usesTargetBodyFat && rawTargetBodyFatPercent !== null) {
-    warnings.push("Target body-fat percentage is only used for fat-loss and recomposition goals in version 1. Maintenance uses current body weight; muscle gain/bulking would also need target body weight or projected lean-mass gain before target body fat could drive a protein estimate.");
+    if (goal === "maintenance") {
+      warnings.push("Target body-fat percentage is not used for maintenance in version 1. Maintenance uses current body weight; a different target body fat implies a body-composition change rather than maintenance.");
+    } else if (goal === "muscle_gain") {
+      warnings.push("Target body-fat percentage is not used for muscle gain/bulking in version 1. A bulk model would also need target body weight, projected lean-mass gain, or an expected fat:lean gain split before target body fat could drive a protein estimate.");
+    } else {
+      warnings.push("Target body-fat percentage is only used for fat-loss and recomposition goals in version 1.");
+    }
   }
 
   if (usesTargetBodyFat && targetBodyFatPercent !== null) {
