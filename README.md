@@ -18,12 +18,16 @@ GitHub Pages URL: https://egemulayim.github.io/evidence-based-resistance-trainin
 +-- calculation.html
 +-- styles.css
 +-- script.js
++-- package.json
 +-- README.md
 +-- CHANGELOG.md
 +-- LICENSE
 +-- .gitignore
-`-- docs/
-    `-- CALCULATION.md
++-- docs/
+|   +-- CALCULATION.md
+`-- tests/
+    +-- calculator.test.js
+    `-- static-pages.test.js
 ```
 
 The public web app files live at the repository root so GitHub Pages can serve them directly. `calculation.html` is the user-facing explanation linked from the app, and `docs/CALCULATION.md` keeps the same method in Markdown form.
