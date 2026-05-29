@@ -73,15 +73,6 @@ Exports are generated in the browser from the current calculation result. No dat
 
 See [CHANGELOG.md](CHANGELOG.md).
 
-## Deployment on GitHub Pages
-
-1. Push the repository to GitHub.
-2. In the repository settings, open **Pages**.
-3. Set the source to deploy from the default branch root.
-4. Save and wait for GitHub Pages to publish the site.
-
-Because this is a static site, it does not require a backend, database, login system, or server-side build process.
-
 ## Disclaimer
 
 This calculator is for educational purposes only. It is intended for generally healthy adults who perform resistance training. It is not medical advice and is not designed for kidney disease, pregnancy, adolescents, eating disorders, clinical nutrition, diagnosed medical conditions, or medically supervised weight loss. Consult a qualified clinician or registered dietitian for personal medical guidance.
