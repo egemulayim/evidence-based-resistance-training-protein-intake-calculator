@@ -42,6 +42,16 @@ python3 -m http.server 8000
 
 Then visit `http://localhost:8000`.
 
+## Testing
+
+The repository uses Node's built-in test runner and has no test dependencies.
+
+```bash
+npm test
+```
+
+The regression suite covers calculation formulas, goal/phase gating, target-body-fat scoping, warnings, reports, static page links, and compact slash formatting.
+
 ## Calculation Summary
 
 Scientific multipliers use kilograms internally because the literature is expressed in grams per kilogram per day. Displayed body weights use the selected unit system first and show the alternate unit in parentheses.
@@ -53,6 +63,7 @@ Scientific multipliers use kilograms internally because the literature is expres
 - Diet phase options: fat loss uses moderate deficit or aggressive cut/lean athlete context; recomposition uses maintenance/slight deficit or moderate deficit.
 - Body-fat percentage provides fat-mass and lean-mass context for every goal.
 - Body-fat percentage also enables lean-mass-adjusted logic for fat-loss and recomposition goals, with optional goal-weight adjustment if target body-fat percentage is supplied.
+- For fat loss, target body-fat percentage must be lower than current body-fat percentage. For recomposition, same-or-higher target body fat is not allowed to drive the goal-weight branch.
 - Target body-fat percentage is shown only for fat-loss and recomposition goals. It is not used for maintenance or muscle gain/bulking in version 1 because the current goal-weight equation assumes lean mass is preserved, while a bulk would also need target body weight, projected lean-mass gain, or an expected fat:lean gain split.
 - If body-fat percentage is missing for fat-loss or recomposition goals, the calculator falls back to current body weight and shows a reduced-precision warning.
 - Displayed protein values are rounded to the nearest 5 g.

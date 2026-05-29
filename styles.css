@@ -430,6 +430,12 @@ select:focus {
   outline: 3px solid var(--focus-subtle);
 }
 
+input[aria-invalid="true"],
+select[aria-invalid="true"] {
+  border-color: var(--danger);
+  outline: 3px solid var(--danger-bg);
+}
+
 .input-with-unit {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

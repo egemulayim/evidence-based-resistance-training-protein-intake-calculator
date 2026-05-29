@@ -93,6 +93,9 @@ leanBodyMassKg = weightKg - fatMassKg</code></pre>
             This goal-weight estimate is not a prediction. It is only a simplified body-composition estimate.
           </p>
           <p>
+            For fat loss, target body-fat percentage must be lower than current body-fat percentage. For recomposition, a target body-fat percentage that is equal to or higher than current body-fat percentage is not used for the goal-weight branch; the calculator falls back to the lean-mass-adjusted recomposition basis.
+          </p>
+          <p>
             Target body-fat percentage is not used for maintenance or muscle gain in version 1. Maintenance uses current body weight. Muscle gain/bulking would also need target body weight, projected lean-mass gain, or an expected fat:lean gain split before target body fat could drive a protein estimate.
           </p>
         </section>
@@ -130,7 +133,7 @@ rangeHigh = weightKg * 2.2</code></pre>
             Fat-loss and recomposition goals use both goal and diet phase intensity. Fat loss is modeled with a stronger lean-retention bias. Recomposition is modeled slightly lower because the goal includes resistance-training adaptation and is usually closer to maintenance or a smaller deficit.
           </p>
           <p>
-            If target body-fat percentage is supplied for a fat-loss or recomposition goal, the adjusted basis is estimated goal weight. Otherwise, the adjusted basis is lean body mass.
+            If target body-fat percentage is supplied for a valid fat-loss or recomposition goal-weight estimate, the adjusted basis is estimated goal weight. Otherwise, the adjusted basis is lean body mass.
           </p>
 
           <h4>Fat Loss: Moderate Deficit</h4>

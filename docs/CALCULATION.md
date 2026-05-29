@@ -49,6 +49,8 @@ goalWeightKg = leanBodyMassKg/(1 - targetBodyFatPercent/100)
 
 This goal-weight estimate is not a prediction. It is only a simplified way to ask what body weight would correspond to the target body-fat percentage if lean mass stayed the same.
 
+For fat loss, target body-fat percentage must be lower than current body-fat percentage. For recomposition, a target body-fat percentage that is equal to or higher than current body-fat percentage is not used for the goal-weight branch; the calculator falls back to the lean-mass-adjusted recomposition basis.
+
 Version 1 does not use target body-fat percentage for maintenance or muscle gain. For maintenance, a different target body-fat percentage implies a body-composition change rather than weight maintenance. For muscle gain/bulking, target body fat alone is not enough because bulking changes lean mass and usually some fat mass. A bulk-planning model would also need target body weight, projected lean-mass gain, or an expected fat:lean gain split before target body fat could be used in a protein calculation.
 
 ## Protein Recommendation Model
@@ -95,7 +97,7 @@ Fat-loss and recomposition goals use both goal and diet phase intensity. Fat los
 
 If body-fat percentage is supplied, these modes use lean-mass and adjusted-weight logic rather than relying only on total current body weight.
 
-If target body-fat percentage is supplied for a fat-loss or recomposition goal:
+If target body-fat percentage is supplied for a valid fat-loss or recomposition goal-weight estimate:
 
 ```text
 adjustedBasisKg = goalWeightKg

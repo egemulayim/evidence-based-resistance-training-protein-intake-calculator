@@ -146,6 +146,53 @@ function goalUsesTargetBodyFat(goal) {
   return goal === "fat_loss" || goal === "recomposition";
 }
 
+function getTargetBodyFatRelationshipNotice(input) {
+  const goal = input.goal;
+
+  if (!goalUsesTargetBodyFat(goal)) {
+    return {
+      errors: [],
+      warnings: [],
+      invalidTargetBodyFat: false,
+    };
+  }
+
+  const bodyFatPercent = parseOptionalNumber(input.bodyFatPercent);
+  const targetBodyFatPercent = parseOptionalNumber(input.targetBodyFatPercent);
+
+  if (
+    bodyFatPercent === null
+    || targetBodyFatPercent === null
+    || Number.isNaN(bodyFatPercent)
+    || Number.isNaN(targetBodyFatPercent)
+    || bodyFatPercent < 3
+    || bodyFatPercent > 70
+    || targetBodyFatPercent < 3
+    || targetBodyFatPercent > 60
+    || targetBodyFatPercent < bodyFatPercent
+  ) {
+    return {
+      errors: [],
+      warnings: [],
+      invalidTargetBodyFat: false,
+    };
+  }
+
+  if (goal === "fat_loss") {
+    return {
+      errors: ["For fat loss, target body-fat percentage must be lower than current body-fat percentage."],
+      warnings: [],
+      invalidTargetBodyFat: true,
+    };
+  }
+
+  return {
+    errors: [],
+    warnings: ["For recomposition, target body-fat percentage is equal to or higher than current body-fat percentage, so the goal-weight branch will be ignored."],
+    invalidTargetBodyFat: false,
+  };
+}
+
 function roundToNearestFive(value) {
   return Math.round(value/5) * 5;
 }
@@ -391,6 +438,7 @@ function calculateProtein(input) {
   const rawTargetBodyFatPercent = parseOptionalNumber(input.targetBodyFatPercent);
   const targetBodyFatPercent = usesTargetBodyFat ? rawTargetBodyFatPercent : null;
   const hasTargetBodyFatPercent = targetBodyFatPercent !== null && !Number.isNaN(targetBodyFatPercent);
+  let targetBodyFatDrivesGoalWeight = hasTargetBodyFatPercent;
 
   if (!usesTargetBodyFat && rawTargetBodyFatPercent !== null) {
     if (goal === "maintenance") {
@@ -407,6 +455,21 @@ function calculateProtein(input) {
       errors.push("Target body-fat percentage must be between 3 and 60.");
     } else if (targetBodyFatPercent < 8) {
       warnings.push("The supplied target body-fat percentage is very low. Treat any goal-weight estimate as contextual, not as a recommended target.");
+    }
+  }
+
+  if (
+    hasTargetBodyFatPercent
+    && hasBodyFatPercent
+    && bodyFatPercent >= 3
+    && bodyFatPercent <= 70
+    && targetBodyFatPercent >= bodyFatPercent
+  ) {
+    if (goal === "fat_loss") {
+      errors.push("For fat loss, target body-fat percentage must be lower than current body-fat percentage.");
+    } else if (goal === "recomposition") {
+      targetBodyFatDrivesGoalWeight = false;
+      warnings.push("The target body-fat percentage is equal to or higher than the current body-fat percentage, so the goal-weight branch was not used for this recomposition estimate.");
     }
   }
 
@@ -449,12 +512,8 @@ function calculateProtein(input) {
     leanBodyMassKg = weightKg - fatMassKg;
   }
 
-  if (hasTargetBodyFatPercent && hasBodyFatPercent) {
+  if (targetBodyFatDrivesGoalWeight && hasBodyFatPercent) {
     goalWeightKg = leanBodyMassKg/(1 - (targetBodyFatPercent/100));
-
-    if ((goal === "fat_loss" || goal === "recomposition") && targetBodyFatPercent >= bodyFatPercent) {
-      warnings.push("The target body-fat percentage is equal to or higher than the current body-fat percentage, so the goal-weight calculation may not represent fat-loss progress.");
-    }
   } else if (hasTargetBodyFatPercent && !hasBodyFatPercent) {
     warnings.push("Target body-fat percentage was supplied, but current body-fat percentage is needed to estimate goal weight.");
   }
@@ -928,6 +987,23 @@ function renderMessages(container, errors, warnings) {
   }
 }
 
+function renderImmediateInputMessages(form, messages) {
+  const notice = getTargetBodyFatRelationshipNotice(getFormInput(form));
+  const targetBodyFatInput = form.querySelector('[name="targetBodyFatPercent"]');
+
+  if (targetBodyFatInput) {
+    if (notice.invalidTargetBodyFat) {
+      targetBodyFatInput.setAttribute("aria-invalid", "true");
+      targetBodyFatInput.setCustomValidity(notice.errors[0]);
+    } else {
+      targetBodyFatInput.removeAttribute("aria-invalid");
+      targetBodyFatInput.setCustomValidity("");
+    }
+  }
+
+  renderMessages(messages, notice.errors, notice.warnings);
+}
+
 function estimateRow(estimate, result) {
   if (!estimate) {
     return "";
@@ -1128,6 +1204,8 @@ function setTargetBodyFatVisibility(goal) {
 
   if (!shouldShow) {
     targetBodyFatInput.value = "";
+    targetBodyFatInput.removeAttribute("aria-invalid");
+    targetBodyFatInput.setCustomValidity("");
   }
 }
 
@@ -1212,6 +1290,7 @@ function initCalculator() {
   const resultsPanel = document.querySelector(".results-panel");
   const unitInputs = form.querySelectorAll('input[name="unitSystem"]');
   const goalSelect = form.querySelector('select[name="goal"]');
+  const immediateValidationFields = form.querySelectorAll('select[name="goal"], input[name="bodyFatPercent"], input[name="targetBodyFatPercent"]');
 
   unitInputs.forEach((input) => {
     input.addEventListener("change", () => setUnitVisibility(input.value));
@@ -1223,8 +1302,14 @@ function initCalculator() {
     goalSelect.addEventListener("change", () => {
       setDietPhaseVisibility(goalSelect.value);
       setTargetBodyFatVisibility(goalSelect.value);
+      renderImmediateInputMessages(form, messages);
     });
   }
+
+  immediateValidationFields.forEach((field) => {
+    field.addEventListener("input", () => renderImmediateInputMessages(form, messages));
+    field.addEventListener("change", () => renderImmediateInputMessages(form, messages));
+  });
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -1291,6 +1376,7 @@ if (typeof module !== "undefined") {
     buildMarkdownReport,
     buildTextReport,
     calculateProtein,
+    getTargetBodyFatRelationshipNotice,
     roundToNearestFive,
     roundToOne,
   };

@@ -11,8 +11,11 @@ All notable changes to this project will be documented in this file.
 - Removed maintenance/slight deficit from fat-loss phase options.
 - Fixed the conditional-field wiring so goal and body-fat percentage remain visible for all goals.
 - Scoped target body-fat percentage to fat-loss and recomposition goals, with maintenance and muscle-gain/bulking treated as unsupported for that preserved-lean-mass equation in version 1.
+- Rejected fat-loss target body-fat values that are not lower than current body fat, and prevented same-or-higher recomposition targets from driving the goal-weight branch.
+- Added immediate target-body-fat feedback so fat-loss and recomposition users see target/current body-fat conflicts before submitting the form.
 - Added GitHub repository links to the calculator and calculation pages.
-- Updated public and developer calculation documentation to match the phase-based formulas.
+- Added a dependency-free Node test suite covering formulas, goal/phase gating, target-body-fat behavior, warnings, reports, and static page invariants.
+- Updated public calculation documentation to match the phase-based formulas.
 
 ## [0.1.0] - 2026-05-29
 
