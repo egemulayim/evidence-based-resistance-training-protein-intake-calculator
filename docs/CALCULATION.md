@@ -1,6 +1,6 @@
 # Calculation Method
 
-This document explains the public calculation model used by the Evidence-Based Resistance Training Protein Intake Calculator.
+This document explains the public calculation model used by Resistance Training Protein Intake Calculator.
 
 The calculator is an educational tool for generally healthy adults who perform resistance training. It estimates a daily protein intake range for maintenance, muscle gain, fat loss, or body recomposition. It is not medical advice, a clinical nutrition tool, or a full diet planner.
 

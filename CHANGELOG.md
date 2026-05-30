@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2026-05-30
+
+### Changed
+
+- Changed the desktop browser title, home-page heading, and share-preview title metadata to `Resistance Training Protein Intake Calculator`.
+- Updated the calculation page title metadata to `Calculation Method | Resistance Training Protein Intake Calculator`.
+- Updated the home-page intro copy to emphasize an evidence-informed protein target while keeping the calculation basis visible.
+
 ## [1.0.2] - 2026-05-30
 
 ### Changed

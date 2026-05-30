@@ -254,7 +254,7 @@ test("public docs document method sensitivity interpretation", () => {
 test("README documents static GitHub Pages deployment", () => {
   const readme = read("README.md");
 
-  assert.match(readme, /Status: Version 1\.0\.2 stable\./);
+  assert.match(readme, /Status: Version 1\.0\.3 stable\./);
   assert.match(readme, /## Deployment/);
   assert.match(readme, /static files from the `main` branch root with GitHub Pages/i);
   assert.match(readme, /No build command/i);
@@ -266,13 +266,13 @@ test("static pages include favicon, home-screen icons, and share-preview metadat
     {
       file: "index.html",
       canonical: "https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/",
-      title: "Evidence-Based Resistance Training Protein Intake Calculator",
+      title: "Resistance Training Protein Intake Calculator",
       description: "Estimate daily protein intake for resistance-training goals with transparent, client-side calculations.",
     },
     {
       file: "calculation.html",
       canonical: "https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/calculation.html",
-      title: "Calculation Method | Evidence-Based Resistance Training Protein Intake Calculator",
+      title: "Calculation Method | Resistance Training Protein Intake Calculator",
       description: "Review the assumptions, equations, evidence basis, and limits behind the resistance-training protein intake calculator.",
     },
   ];
@@ -280,6 +280,7 @@ test("static pages include favicon, home-screen icons, and share-preview metadat
   for (const page of pages) {
     const html = read(page.file);
 
+    assert.ok(html.includes(`<title>${page.title}</title>`));
     assert.ok(html.includes(`<link rel="canonical" href="${page.canonical}">`));
     assert.match(html, /<link rel="icon" href="favicon\.svg" type="image\/svg\+xml">/);
     assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="icons\/apple-touch-icon\.png">/);
@@ -289,7 +290,7 @@ test("static pages include favicon, home-screen icons, and share-preview metadat
     assert.match(html, /<meta name="mobile-web-app-capable" content="yes">/);
     assert.match(html, /<meta name="application-name" content="Protein Intake Calculator">/);
     assert.match(html, /<meta property="og:type" content="website">/);
-    assert.match(html, /<meta property="og:site_name" content="Evidence-Based Resistance Training Protein Intake Calculator">/);
+    assert.match(html, /<meta property="og:site_name" content="Resistance Training Protein Intake Calculator">/);
     assert.ok(html.includes(`<meta property="og:title" content="${page.title}">`));
     assert.ok(html.includes(`<meta property="og:description" content="${page.description}">`));
     assert.ok(html.includes(`<meta property="og:url" content="${page.canonical}">`));
@@ -299,6 +300,8 @@ test("static pages include favicon, home-screen icons, and share-preview metadat
   }
 
   assert.match(read("favicon.svg"), /<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 64 64">/);
+  assert.match(read("index.html"), /<h1>Resistance Training Protein Intake Calculator<\/h1>/);
+  assert.match(read("index.html"), /Estimate an evidence-informed daily protein target for resistance-training goals, with the calculation basis shown\./);
 });
 
 test("web app manifest points at generated PNG home-screen icons", () => {
