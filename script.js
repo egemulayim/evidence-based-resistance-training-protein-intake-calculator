@@ -185,6 +185,44 @@ function getDietPhaseOptionsForGoal(goal) {
   }));
 }
 
+function buildDietPhaseSelect(goal, currentValue) {
+  const select = document.createElement("select");
+  select.id = "diet-phase";
+  select.name = "dietPhase";
+  select.disabled = !goalUsesDietPhase(goal);
+
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = "Select phase intensity";
+
+  const phaseOptions = getDietPhaseOptionsForGoal(goal).map(({ value, label }) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    return option;
+  });
+
+  select.replaceChildren(placeholderOption, ...phaseOptions);
+
+  if (phaseOptions.some((option) => option.value === currentValue)) {
+    select.value = currentValue;
+  }
+
+  return select;
+}
+
+function replaceDietPhaseSelect(goal, currentValue) {
+  const existingSelect = document.getElementById("diet-phase");
+
+  if (!existingSelect) {
+    return null;
+  }
+
+  const nextSelect = buildDietPhaseSelect(goal, currentValue);
+  existingSelect.replaceWith(nextSelect);
+  return nextSelect;
+}
+
 function getNoticeBodyFatPercent(input) {
   const unitSystem = input.unitSystem;
   let weightKg = null;
@@ -1456,29 +1494,8 @@ function setDietPhaseVisibility(goal) {
 
   const shouldShow = goalUsesDietPhase(goal);
   dietPhaseField.hidden = !shouldShow;
-  dietPhaseSelect.disabled = !shouldShow;
   const currentValue = dietPhaseSelect.value;
-  const placeholderOption = document.createElement("option");
-  placeholderOption.value = "";
-  placeholderOption.textContent = "Select phase intensity";
-
-  if (!shouldShow) {
-    dietPhaseSelect.replaceChildren(placeholderOption);
-    return;
-  }
-
-  const options = getDietPhaseOptionsForGoal(goal).map(({ value, label }) => {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    return option;
-  });
-
-  dietPhaseSelect.replaceChildren(placeholderOption, ...options);
-
-  if (options.some((option) => option.value === currentValue)) {
-    dietPhaseSelect.value = currentValue;
-  }
+  replaceDietPhaseSelect(goal, currentValue);
 }
 
 function setTargetBodyFatVisibility(goal) {
