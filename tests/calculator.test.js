@@ -7,6 +7,7 @@ const {
   buildMarkdownReport,
   buildTextReport,
   calculateProtein,
+  describeMethodSensitivity,
   getDietPhaseOptionsForGoal,
   getTargetBodyFatRelationshipNotice,
   roundToNearestFive,
@@ -625,6 +626,42 @@ test("reports include goal-weight context when target body fat is valid for fat 
   assert.match(textReport, /Goal-weight estimate: 93.4 kg/);
   assert.match(markdownReport, /Target body-fat percentage:\*\* 20%/);
   assert.match(markdownReport, /Goal-weight estimate:\*\* 93.4 kg/);
+});
+
+test("method sensitivity describes available estimate spread", () => {
+  const oneMethod = calculate({
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    bodyFatPercent: "",
+  });
+  assert.match(describeMethodSensitivity(oneMethod), /Only one estimate method is available/);
+
+  const smallSpread = calculate({
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    targetBodyFatPercent: "20",
+  });
+  assert.match(describeMethodSensitivity(smallSpread), /differ by 20 g\/day/);
+  assert.match(describeMethodSensitivity(smallSpread), /small practical difference/);
+
+  const largeSpread = calculate({
+    goal: "maintenance",
+  });
+  assert.match(describeMethodSensitivity(largeSpread), /differ by 45 g\/day/);
+  assert.match(describeMethodSensitivity(largeSpread), /large difference/);
+});
+
+test("reports include method sensitivity after estimate comparison", () => {
+  const result = calculate({
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    targetBodyFatPercent: "20",
+  });
+  const textReport = buildTextReport(result);
+  const markdownReport = buildMarkdownReport(result);
+
+  assert.match(textReport, /Method sensitivity\n- The available methods differ by 20 g\/day/);
+  assert.match(markdownReport, /### Method Sensitivity\n\nThe available methods differ by 20 g\/day/);
 });
 
 test("reports include known lean body mass context when supplied", () => {

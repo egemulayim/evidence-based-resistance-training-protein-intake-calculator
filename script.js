@@ -1051,6 +1051,31 @@ function reportEstimateRows(result) {
   ].filter(Boolean);
 }
 
+function describeMethodSensitivity(result) {
+  const estimates = reportEstimateRows(result);
+
+  if (estimates.length < 2) {
+    return "Only one estimate method is available for these inputs, so there is no method-sensitivity comparison. Add body-fat percentage or known lean body mass to compare current-weight and lean-mass bases.";
+  }
+
+  const defaultTargets = estimates.map((estimate) => estimate.display.defaultTarget);
+  const spread = Math.max(...defaultTargets) - Math.min(...defaultTargets);
+
+  if (spread === 0) {
+    return "The available methods produce the same rounded default target. The chosen basis does not materially change the practical result for these inputs.";
+  }
+
+  if (spread <= 20) {
+    return `The available methods differ by ${formatProtein(spread)} in rounded midpoint targets. That is a small practical difference, so the default target should be treated as a useful anchor rather than a precise threshold.`;
+  }
+
+  if (spread <= 40) {
+    return `The available methods differ by ${formatProtein(spread)} in rounded midpoint targets. That is a moderate difference; body-composition assumptions affect the target, so the selected basis matters for interpretation.`;
+  }
+
+  return `The available methods differ by ${formatProtein(spread)} in rounded midpoint targets. That is a large difference; body-composition and goal-weight assumptions meaningfully affect the recommendation.`;
+}
+
 function buildTextReport(result) {
   const lines = [
     "Evidence-Based Resistance Training Protein Intake Calculator Results",
@@ -1098,6 +1123,7 @@ function buildTextReport(result) {
   reportEstimateRows(result).forEach((estimate) => {
     lines.push(`- ${estimate.label}: basis ${formatWeightForUser(result, estimate.basisKg)}, minimum ${formatProtein(estimate.display.minimum)}, range ${formatRange(estimate.display.rangeLow, estimate.display.rangeHigh)}`);
   });
+  lines.push("", "Method sensitivity", `- ${describeMethodSensitivity(result)}`);
 
   if (result.selected.perMeal) {
     lines.push(
@@ -1191,6 +1217,13 @@ function buildMarkdownReport(result) {
   reportEstimateRows(result).forEach((estimate) => {
     lines.push(`| ${estimate.label} | ${formatWeightForUser(result, estimate.basisKg)} | ${formatProtein(estimate.display.minimum)} | ${formatRange(estimate.display.rangeLow, estimate.display.rangeHigh)} |`);
   });
+
+  lines.push(
+    "",
+    "### Method Sensitivity",
+    "",
+    describeMethodSensitivity(result)
+  );
 
   if (result.selected.perMeal) {
     lines.push(
@@ -1362,6 +1395,7 @@ function renderResults(result, container) {
     estimateRow(result.estimates.leanMass, result),
     estimateRow(result.estimates.goalWeight, result),
   ].join("");
+  const methodSensitivity = describeMethodSensitivity(result);
   const phaseContext = result.input.dietPhaseLabel
     ? `<p><strong>Diet phase:</strong> ${result.input.dietPhaseLabel}</p>`
     : "";
@@ -1415,6 +1449,10 @@ function renderResults(result, container) {
         </thead>
         <tbody>${estimateRows}</tbody>
       </table>
+      <div class="method-sensitivity">
+        <h4>Method sensitivity</h4>
+        <p>${escapeHtml(methodSensitivity)}</p>
+      </div>
     </div>
 
     ${perMealRangeText ? `
@@ -1752,6 +1790,7 @@ if (typeof module !== "undefined") {
     buildMarkdownReport,
     buildTextReport,
     calculateProtein,
+    describeMethodSensitivity,
     getDietPhaseOptionsForGoal,
     getTargetBodyFatRelationshipNotice,
     roundToNearestFive,

@@ -69,6 +69,8 @@ The calculator produces multiple estimates when the inputs allow it, then select
 
 The default target is calculated from the midpoint of the raw practical range first, then rounded to the nearest 5 grams.
 
+The result view also reports method sensitivity. This compares the rounded midpoint targets from the available current-weight, lean-mass, and goal-weight estimates. If only one estimate is available, no sensitivity comparison is shown beyond that limitation. If multiple estimates are available, a 0 g/day spread means the methods produce the same practical target, 5-20 g/day is labeled a small practical difference, 25-40 g/day is labeled a moderate difference, and more than 40 g/day is labeled a large difference. This does not change the recommendation; it shows how much the answer depends on body-composition and goal-weight assumptions.
+
 ### Maintenance While Resistance Training
 
 Maintenance uses current body weight as the main basis:

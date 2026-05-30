@@ -741,6 +741,18 @@ select[aria-invalid="true"] {
   text-transform: uppercase;
 }
 
+.method-sensitivity {
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.method-sensitivity p {
+  margin: 6px 0 0;
+}
+
 .basis-badge {
   display: inline-block;
   max-width: 100%;

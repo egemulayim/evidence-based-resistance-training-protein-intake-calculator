@@ -103,6 +103,19 @@ test("public docs document known lean-mass behavior and measurement caveats", ()
   }
 });
 
+test("public docs document method sensitivity interpretation", () => {
+  const publicDocs = read("docs/CALCULATION.md");
+  const calculationPage = read("calculation.html");
+
+  for (const contents of [publicDocs, calculationPage]) {
+    assert.match(contents, /method sensitivity/i);
+    assert.match(contents, /current-weight/i);
+    assert.match(contents, /lean-mass/i);
+    assert.match(contents, /goal-weight/i);
+    assert.match(contents, /rounded midpoint targets/i);
+  }
+});
+
 test("mobile result styles avoid result-only horizontal overflow", () => {
   const styles = read("styles.css");
 
