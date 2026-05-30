@@ -669,7 +669,7 @@ select[aria-invalid="true"] {
 
 .result-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.05fr) minmax(0, 1fr) repeat(2, minmax(0, 0.75fr));
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.65fr) minmax(0, 0.55fr);
   gap: 6px;
   min-width: 0;
   max-width: 100%;
@@ -1029,13 +1029,17 @@ select[aria-invalid="true"] {
 
   .compact-button {
     padding-inline: 4px;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
   }
 }
 
 @media (max-width: 360px) {
+  .result-actions {
+    gap: 4px;
+  }
+
   .compact-button {
-    padding-inline: 3px;
-    font-size: 0.72rem;
+    padding-inline: 2px;
+    font-size: 0.68rem;
   }
 }
