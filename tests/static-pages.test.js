@@ -254,7 +254,7 @@ test("public docs document method sensitivity interpretation", () => {
 test("README documents static GitHub Pages deployment", () => {
   const readme = read("README.md");
 
-  assert.match(readme, /Status: Version 1\.0\.1 stable\./);
+  assert.match(readme, /Status: Version 1\.0\.2 stable\./);
   assert.match(readme, /## Deployment/);
   assert.match(readme, /static files from the `main` branch root with GitHub Pages/i);
   assert.match(readme, /No build command/i);
@@ -284,10 +284,10 @@ test("static pages include favicon, home-screen icons, and share-preview metadat
     assert.match(html, /<link rel="icon" href="favicon\.svg" type="image\/svg\+xml">/);
     assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="icons\/apple-touch-icon\.png">/);
     assert.match(html, /<link rel="manifest" href="site\.webmanifest">/);
-    assert.match(html, /<meta name="apple-mobile-web-app-title" content="Protein Calculator">/);
+    assert.match(html, /<meta name="apple-mobile-web-app-title" content="Protein Intake Calculator">/);
     assert.match(html, /<meta name="apple-mobile-web-app-capable" content="yes">/);
     assert.match(html, /<meta name="mobile-web-app-capable" content="yes">/);
-    assert.match(html, /<meta name="application-name" content="Evidence-Based Resistance Training Protein Intake Calculator">/);
+    assert.match(html, /<meta name="application-name" content="Protein Intake Calculator">/);
     assert.match(html, /<meta property="og:type" content="website">/);
     assert.match(html, /<meta property="og:site_name" content="Evidence-Based Resistance Training Protein Intake Calculator">/);
     assert.ok(html.includes(`<meta property="og:title" content="${page.title}">`));
@@ -305,8 +305,8 @@ test("web app manifest points at generated PNG home-screen icons", () => {
   const manifest = JSON.parse(read("site.webmanifest"));
 
   assert.equal(manifest.id, "./");
-  assert.equal(manifest.name, "Evidence-Based Resistance Training Protein Intake Calculator");
-  assert.equal(manifest.short_name, "Protein Calc");
+  assert.equal(manifest.name, "Protein Intake Calculator");
+  assert.equal(manifest.short_name, "Protein Intake Calculator");
   assert.equal(manifest.start_url, "./");
   assert.equal(manifest.scope, "./");
   assert.equal(manifest.display, "standalone");
@@ -341,6 +341,16 @@ test("web app manifest points at generated PNG home-screen icons", () => {
       [16, 34, 30, 255],
       [16, 34, 30, 255],
     ]);
+  }
+});
+
+test("public docs describe body-composition values as user-entered or externally estimated", () => {
+  const publicDocs = read("docs/CALCULATION.md");
+  const calculationPage = read("calculation.html");
+
+  for (const contents of [publicDocs, calculationPage]) {
+    assert.match(contents, /User-entered body-fat percentage may come from an imprecise external estimate/i);
+    assert.match(contents, /not independently measured by this calculator/i);
   }
 });
 

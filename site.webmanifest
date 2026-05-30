@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Evidence-Based Resistance Training Protein Intake Calculator",
-  "short_name": "Protein Calc",
+  "name": "Protein Intake Calculator",
+  "short_name": "Protein Intake Calculator",
   "description": "Estimate daily protein intake for resistance-training goals with transparent, client-side calculations.",
   "start_url": "./",
   "scope": "./",

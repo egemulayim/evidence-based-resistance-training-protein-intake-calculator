@@ -2,7 +2,7 @@
 
 A small static calculator for estimating daily protein intake for generally healthy adults who perform resistance training and have body-composition goals.
 
-Status: Version 1.0.1 stable.
+Status: Version 1.0.2 stable.
 
 The interface starts from the user's system light or dark mode setting, with a persistent manual light/dark toggle.
 

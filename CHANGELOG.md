@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-05-30
+
+### Changed
+
+- Changed mobile install and Add to Home Screen app names to `Protein Intake Calculator`.
+- Clarified calculation-limit wording so body-fat percentage and lean body mass are described as user-entered or externally estimated values, not values independently measured by the calculator.
+
 ## [1.0.1] - 2026-05-30
 
 ### Added

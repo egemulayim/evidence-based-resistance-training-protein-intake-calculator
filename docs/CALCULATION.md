@@ -225,8 +225,8 @@ The output should be interpreted as an evidence-informed estimate, not a precise
 
 Important limitations:
 
-- body-fat percentage is often estimated imprecisely;
-- lean body mass is estimated, not measured;
+- user-entered body-fat percentage may come from an imprecise external estimate;
+- lean body mass is either supplied from an external body-composition estimate or calculated from the entered body-fat percentage; it is not independently measured by this calculator;
 - user-supplied lean body mass can differ across DXA, BIA, skinfold/caliper, and other methods;
 - goal-weight estimates assume lean mass is preserved;
 - the calculator does not know actual calorie intake or deficit size;
