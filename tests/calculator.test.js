@@ -663,11 +663,19 @@ test("reports include method sensitivity after estimate comparison", () => {
     dietPhase: "moderate_deficit",
     targetBodyFatPercent: "20",
   });
-  const textReport = buildTextReport(result);
-  const markdownReport = buildMarkdownReport(result);
+  const textReport = buildTextReport(
+    result,
+    "https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/"
+  );
+  const markdownReport = buildMarkdownReport(
+    result,
+    "https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/"
+  );
 
   assert.match(textReport, /Method sensitivity\n- The available methods differ by 20 g\/day/);
   assert.match(markdownReport, /### Method Sensitivity\n\nThe available methods differ by 20 g\/day/);
+  assert.match(textReport, /Open this calculation\nhttps:\/\/egemulayim\.github\.io\/evidence-based-resistance-training-protein-intake-calculator\/#pc=1&/);
+  assert.match(markdownReport, /## Open This Calculation\n\nhttps:\/\/egemulayim\.github\.io\/evidence-based-resistance-training-protein-intake-calculator\/#pc=1&/);
 });
 
 test("summary report includes compact result and share link", () => {

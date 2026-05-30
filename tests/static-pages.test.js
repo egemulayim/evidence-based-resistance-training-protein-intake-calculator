@@ -69,7 +69,7 @@ test("index page links GitHub and scopes target body fat to fat loss/recomp", ()
   assert.match(html, /type="button" data-reset-calculator>Reset<\/button>/);
   assert.match(read("script.js"), /data-result-action="summary"[^>]*>Summary<\/button>/);
   assert.match(read("script.js"), /data-result-action="report"[^>]*>Report<\/button>/);
-  assert.match(read("script.js"), /data-result-action="share"[^>]*>Link<\/button>/);
+  assert.match(read("script.js"), /data-result-action="share"[^>]*>Share<\/button>/);
 });
 
 test("calculation page links GitHub and explains why target body fat is not a bulk model", () => {

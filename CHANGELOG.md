@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Added method sensitivity text to the on-page results and exported reports.
 - Added a reset button that clears all inputs, results, messages, and calculator share-link state.
 - Added a compact summary-copy action with the share link included at the end.
+- Added restorable calculation links to full TXT and Markdown reports.
 
 ## [0.1.2] - 2026-05-30
 

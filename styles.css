@@ -669,7 +669,7 @@ select[aria-invalid="true"] {
 
 .result-actions {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.05fr) minmax(0, 1fr) repeat(2, minmax(0, 0.75fr));
   gap: 6px;
   min-width: 0;
   max-width: 100%;
@@ -681,6 +681,9 @@ select[aria-invalid="true"] {
   padding-inline: 6px;
   font-size: 0.86rem;
   line-height: 1.15;
+  overflow: hidden;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .action-status {
@@ -1022,5 +1025,17 @@ select[aria-invalid="true"] {
   .estimate-table {
     table-layout: fixed;
     white-space: normal;
+  }
+
+  .compact-button {
+    padding-inline: 4px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .compact-button {
+    padding-inline: 3px;
+    font-size: 0.72rem;
   }
 }

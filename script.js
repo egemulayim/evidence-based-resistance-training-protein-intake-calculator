@@ -1285,7 +1285,8 @@ function buildSummaryReport(result, href) {
   return `${lines.join("\n")}\n`;
 }
 
-function buildTextReport(result) {
+function buildTextReport(result, href) {
+  const shareUrl = buildShareUrl(buildShareInputFromResult(result), href);
   const lines = [
     "Evidence-Based Resistance Training Protein Intake Calculator Results",
     "",
@@ -1361,6 +1362,9 @@ function buildTextReport(result) {
     "Calculation method",
     "See calculation.html for the public calculation rationale and citations.",
     "",
+    "Open this calculation",
+    shareUrl,
+    "",
     "Disclaimer",
     DISCLAIMER_TEXT
   );
@@ -1368,7 +1372,8 @@ function buildTextReport(result) {
   return `${lines.join("\n")}\n`;
 }
 
-function buildMarkdownReport(result) {
+function buildMarkdownReport(result, href) {
+  const shareUrl = buildShareUrl(buildShareInputFromResult(result), href);
   const lines = [
     "# Evidence-Based Resistance Training Protein Intake Calculator Results",
     "",
@@ -1464,6 +1469,10 @@ function buildMarkdownReport(result) {
     "## Calculation Method",
     "",
     "See `calculation.html` for the public calculation rationale and citations.",
+    "",
+    "## Open This Calculation",
+    "",
+    shareUrl,
     "",
     "## Disclaimer",
     "",
@@ -1681,7 +1690,7 @@ function renderResults(result, container) {
     <div class="result-actions" aria-label="Result actions">
       <button class="secondary-button compact-button" type="button" data-result-action="summary" aria-label="Copy summary" title="Copy summary">Summary</button>
       <button class="secondary-button compact-button" type="button" data-result-action="report" aria-label="Copy full report" title="Copy full report">Report</button>
-      <button class="secondary-button compact-button" type="button" data-result-action="share" aria-label="Copy share link" title="Copy share link">Link</button>
+      <button class="secondary-button compact-button" type="button" data-result-action="share" aria-label="Copy share link" title="Copy share link">Share</button>
       <button class="secondary-button compact-button" type="button" data-result-action="txt" aria-label="Export plain text report" title="Export TXT">TXT</button>
       <button class="secondary-button compact-button" type="button" data-result-action="markdown" aria-label="Export Markdown report" title="Export Markdown">MD</button>
       <p class="action-status" id="action-status" aria-live="polite"></p>
@@ -2177,22 +2186,22 @@ function initCalculator() {
       }
 
       if (action === "report") {
-        await copyTextToClipboard(buildTextReport(latestResult));
+        await copyTextToClipboard(buildTextReport(latestResult, window.location.href));
         setActionStatus("Full report copied to clipboard.");
       }
 
       if (action === "share") {
         await copyTextToClipboard(buildShareUrl(buildShareInputFromResult(latestResult), window.location.href));
-        setActionStatus("Share link copied to clipboard.");
+        setActionStatus("Link copied to clipboard.");
       }
 
       if (action === "txt") {
-        downloadReport(buildTextReport(latestResult), `protein-results-${date}.txt`, "text/plain;charset=utf-8");
+        downloadReport(buildTextReport(latestResult, window.location.href), `protein-results-${date}.txt`, "text/plain;charset=utf-8");
         setActionStatus("TXT export downloaded.");
       }
 
       if (action === "markdown") {
-        downloadReport(buildMarkdownReport(latestResult), `protein-results-${date}.md`, "text/markdown;charset=utf-8");
+        downloadReport(buildMarkdownReport(latestResult, window.location.href), `protein-results-${date}.md`, "text/markdown;charset=utf-8");
         setActionStatus("Markdown export downloaded.");
       }
     } catch (error) {

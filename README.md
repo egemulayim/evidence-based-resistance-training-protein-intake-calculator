@@ -87,7 +87,7 @@ After calculating a result, the page can:
 
 Exports are generated in the browser from the current calculation result. No data is sent to a server.
 
-Share links use a URL hash fragment, for example `index.html#pc=1&unitSystem=imperial...`, instead of a query string. This keeps GitHub Pages serving the same static page without routing changes, and the hash fragment is not sent to GitHub Pages in the HTTP request. The summary copy includes this share link at the end. The link itself still contains the user's entered body data, so it should only be shared intentionally.
+Share links use a URL hash fragment, for example `index.html#pc=1&unitSystem=imperial...`, instead of a query string. This keeps GitHub Pages serving the same static page without routing changes, and the hash fragment is not sent to GitHub Pages in the HTTP request. The summary copy and full reports include this share link at the end. The link itself still contains the user's entered body data, so it should only be shared intentionally.
 
 ## Changelog
 
