@@ -46,6 +46,12 @@ python3 -m http.server 8000
 
 Then visit `http://localhost:8000`.
 
+## Deployment
+
+The site is deployed as static files from the `main` branch root with GitHub Pages. No build command, package install, generated output folder, backend, or routing rule is required.
+
+When changes to `index.html`, `calculation.html`, `styles.css`, `script.js`, or `docs/CALCULATION.md` are committed and pushed to the Pages source branch, GitHub Pages can serve the updated app directly. Share links store calculator state in the URL hash, so they work on GitHub Pages without server-side routing.
+
 ## Testing
 
 The repository uses Node's built-in test runner and has no test dependencies.
@@ -54,7 +60,7 @@ The repository uses Node's built-in test runner and has no test dependencies.
 npm test
 ```
 
-The regression suite covers calculation formulas, goal/phase gating, target-body-fat scoping, warnings, reports, share-link serialization, static page links, and compact slash formatting.
+The regression suite covers calculation formulas, goal/phase gating, target-body-fat scoping, warnings, reports, share-link serialization, static page links, README deployment wording, mobile overflow/style guards, and compact slash formatting.
 
 ## Calculation Summary
 

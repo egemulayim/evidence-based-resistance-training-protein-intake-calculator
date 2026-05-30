@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-05-30
+
+### Changed
+
+- Promoted the completed Version 1 app to stable `1.0.0`.
+- Added README deployment instructions for the static GitHub Pages setup.
+- Updated README testing coverage wording.
+
+### Added
+
+- Added static regression checks for README deployment wording and mobile result-action button layout.
+
 ## [0.1.3] - 2026-05-30
 
 ### Added

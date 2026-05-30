@@ -122,6 +122,15 @@ test("public docs document method sensitivity interpretation", () => {
   }
 });
 
+test("README documents static GitHub Pages deployment", () => {
+  const readme = read("README.md");
+
+  assert.match(readme, /## Deployment/);
+  assert.match(readme, /static files from the `main` branch root with GitHub Pages/i);
+  assert.match(readme, /No build command/i);
+  assert.match(readme, /without server-side routing/i);
+});
+
 test("mobile result styles avoid result-only horizontal overflow", () => {
   const styles = read("styles.css");
 
@@ -129,6 +138,16 @@ test("mobile result styles avoid result-only horizontal overflow", () => {
   assert.match(styles, /body\s*{[^}]*overflow-x:\s*hidden/s);
   assert.match(styles, /\.estimate-table\s*{[^}]*table-layout:\s*fixed/s);
   assert.doesNotMatch(styles, /\.estimate-table\s*{[^}]*white-space:\s*nowrap/s);
+});
+
+test("mobile result action buttons stay in one compact row", () => {
+  const styles = read("styles.css");
+  const mobileStyles = styles.match(/@media \(max-width: 620px\) \{[\s\S]*?\n\}/)?.[0] || "";
+
+  assert.match(mobileStyles, /\.result-actions\s*{[^}]*grid-template-columns:\s*minmax\(0,\s*1\.9fr\)[^}]*gap:\s*4px/s);
+  assert.match(mobileStyles, /\.compact-button\s*{[^}]*padding-inline:\s*2px[^}]*font-size:\s*0\.68rem/s);
+  assert.match(styles, /\.compact-button\s*{[^}]*white-space:\s*nowrap/s);
+  assert.match(styles, /@media \(max-width: 360px\) \{[\s\S]*\.compact-button\s*{[^}]*font-size:\s*0\.64rem/s);
 });
 
 test("project text files keep compact slash formatting", () => {
