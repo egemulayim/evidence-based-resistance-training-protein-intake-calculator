@@ -4,6 +4,7 @@ const assert = require("node:assert/strict");
 const test = require("node:test");
 
 const {
+  buildHrefWithShareHash,
   buildMarkdownReport,
   buildShareInputFromResult,
   buildShareUrl,
@@ -705,6 +706,20 @@ test("share URLs use hash state for static hosting", () => {
     mealsPerDay: "3",
   });
   assert.equal(parseShareState("#protein-model"), null);
+});
+
+test("state-preserving links only carry calculator share hashes", () => {
+  const hash = "#pc=1&unitSystem=metric&heightCm=181&weightKg=101&goal=maintenance&trainingDays=3-4";
+
+  assert.equal(
+    buildHrefWithShareHash("calculation.html", hash),
+    `calculation.html${hash}`
+  );
+  assert.equal(
+    buildHrefWithShareHash("index.html#scope", hash),
+    `index.html${hash}`
+  );
+  assert.equal(buildHrefWithShareHash("index.html", "#scope"), "index.html");
 });
 
 test("share input is derived from the latest calculated result", () => {

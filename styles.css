@@ -513,6 +513,10 @@ select[aria-invalid="true"] {
 }
 
 .button-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
   margin-top: 22px;
 }
 
@@ -525,6 +529,7 @@ select[aria-invalid="true"] {
   color: var(--on-accent);
   cursor: pointer;
   font-weight: 800;
+  white-space: normal;
 }
 
 .primary-button:hover {
@@ -557,6 +562,10 @@ select[aria-invalid="true"] {
 .secondary-button:focus-visible {
   outline: 3px solid var(--focus-subtle);
   outline-offset: 2px;
+}
+
+.button-row .secondary-button {
+  min-height: 48px;
 }
 
 .messages {

@@ -65,12 +65,15 @@ test("index page links GitHub and scopes target body fat to fat loss/recomp", ()
   assert.match(html, /Fat loss requires a target below current body fat/);
   assert.match(html, /recomp ignores same-or-higher targets/);
   assert.match(html, /not a bulk-planning input/);
+  assert.match(html, /href="calculation\.html" data-preserve-calculator-state/);
+  assert.match(html, /type="button" data-reset-calculator>Reset<\/button>/);
 });
 
 test("calculation page links GitHub and explains why target body fat is not a bulk model", () => {
   const html = read("calculation.html");
 
   assert.match(html, new RegExp(`<a class="back-link" href="${repoHref}" target="_blank" rel="noopener">GitHub</a>`));
+  assert.match(html, /href="index\.html" data-preserve-calculator-state/);
   assert.match(html, /Target body-fat percentage is not used for maintenance or muscle gain in version 1/);
   assert.match(html, /target body weight, projected lean-mass gain, or an expected fat:lean gain split/);
 });

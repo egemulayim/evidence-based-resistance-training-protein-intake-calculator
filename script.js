@@ -222,6 +222,17 @@ function buildShareUrl(input, href) {
   return url.toString();
 }
 
+function buildHrefWithShareHash(href, hash) {
+  const baseHref = String(href || "").split("#")[0];
+  const normalizedHash = hash && String(hash).startsWith("#") ? String(hash) : `#${hash || ""}`;
+
+  if (!parseShareState(normalizedHash)) {
+    return baseHref;
+  }
+
+  return `${baseHref}${normalizedHash}`;
+}
+
 function parseShareState(hash) {
   const rawHash = typeof hash === "string" ? hash.replace(/^#/, "") : "";
 
@@ -1715,6 +1726,81 @@ function replaceUrlWithShareState(result) {
   window.history.replaceState(null, "", buildShareUrl(buildShareInputFromResult(result), window.location.href));
 }
 
+function syncCalculatorStateLinks(shareHash) {
+  if (typeof document === "undefined" || typeof window === "undefined") {
+    return;
+  }
+
+  const hash = shareHash === undefined ? window.location.hash : shareHash;
+
+  document.querySelectorAll("[data-preserve-calculator-state]").forEach((link) => {
+    const baseHref = link.dataset.baseHref || link.getAttribute("href") || "";
+    link.dataset.baseHref = baseHref.split("#")[0];
+    link.setAttribute("href", buildHrefWithShareHash(link.dataset.baseHref, hash));
+  });
+}
+
+function clearShareStateFromUrl() {
+  if (
+    typeof window === "undefined"
+    || !window.history
+    || typeof window.history.replaceState !== "function"
+    || !parseShareState(window.location.hash)
+  ) {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  url.hash = "";
+  window.history.replaceState(null, "", url.toString());
+}
+
+function clearFieldState(field) {
+  field.removeAttribute("aria-invalid");
+
+  if (typeof field.setCustomValidity === "function") {
+    field.setCustomValidity("");
+  }
+}
+
+function resetCalculatorForm(form) {
+  form.querySelectorAll('input[type="text"]').forEach((input) => {
+    input.value = "";
+    clearFieldState(input);
+  });
+
+  form.querySelectorAll("select").forEach((select) => {
+    select.value = "";
+    clearFieldState(select);
+  });
+
+  form.querySelectorAll('input[name="unitSystem"]').forEach((input) => {
+    input.checked = input.value === "metric";
+  });
+
+  const optionalPanel = form.querySelector(".optional-panel");
+
+  if (optionalPanel) {
+    optionalPanel.open = false;
+  }
+
+  setUnitVisibility("metric");
+  setDietPhaseVisibility("");
+  setTargetBodyFatVisibility("");
+  setKnownLeanMassCustomMethodVisibility("");
+}
+
+function resetCalculatorState(form, messages, resultsContent, status) {
+  latestResult = null;
+  resetCalculatorForm(form);
+  messages.innerHTML = "";
+  status.textContent = "Enter inputs to calculate.";
+  resultsContent.className = "results-placeholder";
+  resultsContent.innerHTML = "";
+  clearShareStateFromUrl();
+  syncCalculatorStateLinks("");
+}
+
 function setUnitVisibility(unitSystem) {
   const metricFields = document.getElementById("metric-fields");
   const imperialFields = document.getElementById("imperial-fields");
@@ -1900,6 +1986,7 @@ function initCalculator() {
   const resultsContent = document.getElementById("results-content");
   const status = document.getElementById("results-status");
   const resultsPanel = document.querySelector(".results-panel");
+  const resetButton = form.querySelector("[data-reset-calculator]");
   const unitInputs = form.querySelectorAll('input[name="unitSystem"]');
   const goalSelect = form.querySelector('select[name="goal"]');
   const knownLeanMassMethodSelect = form.querySelector('select[name="knownLeanMassMethod"]');
@@ -1953,6 +2040,7 @@ function initCalculator() {
 
     if (shouldUpdateShareUrl) {
       replaceUrlWithShareState(result);
+      syncCalculatorStateLinks();
     }
 
     if (shouldScroll) {
@@ -1977,6 +2065,7 @@ function initCalculator() {
 
   window.addEventListener("hashchange", () => {
     applySharedStateFromHash();
+    syncCalculatorStateLinks();
   });
 
   form.addEventListener("submit", (event) => {
@@ -1988,6 +2077,12 @@ function initCalculator() {
 
     calculateAndRender({ shouldScroll: true, shouldUpdateShareUrl: true });
   });
+
+  if (resetButton) {
+    resetButton.addEventListener("click", () => {
+      resetCalculatorState(form, messages, resultsContent, status);
+    });
+  }
 
   resultsPanel.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-result-action]");
@@ -2032,11 +2127,13 @@ if (typeof document !== "undefined") {
   document.addEventListener("DOMContentLoaded", () => {
     initThemeControls();
     initCalculator();
+    syncCalculatorStateLinks();
   });
 }
 
 if (typeof module !== "undefined") {
   module.exports = {
+    buildHrefWithShareHash,
     buildMarkdownReport,
     buildShareInputFromResult,
     buildShareUrl,
