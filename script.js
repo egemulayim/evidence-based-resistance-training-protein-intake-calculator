@@ -472,6 +472,169 @@ function lbToKg(value) {
   return value/2.20462;
 }
 
+function formatRoundedConversion(value, decimalPlaces) {
+  const factor = 10 ** decimalPlaces;
+  const rounded = Math.round(value * factor)/factor;
+  return Number.isInteger(rounded)
+    ? String(rounded)
+    : rounded.toFixed(decimalPlaces).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function formatConvertedNumber(value) {
+  return formatRoundedConversion(value, 2);
+}
+
+function formatConvertedInches(value) {
+  return formatRoundedConversion(value, 3);
+}
+
+function formatConvertedCentimetres(value) {
+  return formatRoundedConversion(value, 2);
+}
+
+function parseValidConversionNumber(value, minimum, maximum) {
+  const parsed = parseOptionalNumber(value);
+
+  if (
+    parsed === null
+    || Number.isNaN(parsed)
+    || parsed < minimum
+    || parsed > maximum
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
+function conversionNumbersMatch(firstValue, secondValue, tolerance) {
+  return (
+    firstValue !== null
+    && secondValue !== null
+    && Number.isFinite(firstValue)
+    && Number.isFinite(secondValue)
+    && Math.abs(firstValue - secondValue) <= tolerance
+  );
+}
+
+function existingImperialHeightMatches(input, heightCm) {
+  const feet = parseOptionalNumber(input.feet);
+  const inchesInput = parseOptionalNumber(input.inches);
+  const inches = inchesInput === null ? 0 : inchesInput;
+
+  if (
+    feet === null
+    || Number.isNaN(feet)
+    || Number.isNaN(inches)
+    || inches < 0
+    || inches >= 12
+  ) {
+    return false;
+  }
+
+  return conversionNumbersMatch(((feet * 12) + inches) * 2.54, heightCm, 0.01);
+}
+
+function existingMetricHeightMatches(input, feet, inches) {
+  const heightCm = parseOptionalNumber(input.heightCm);
+
+  if (heightCm === null || Number.isNaN(heightCm)) {
+    return false;
+  }
+
+  return conversionNumbersMatch(heightCm/2.54, (feet * 12) + inches, 0.005);
+}
+
+function existingImperialWeightMatches(weightLb, weightKg) {
+  const parsedWeightLb = parseOptionalNumber(weightLb);
+
+  if (parsedWeightLb === null || Number.isNaN(parsedWeightLb)) {
+    return false;
+  }
+
+  return conversionNumbersMatch(lbToKg(parsedWeightLb), weightKg, 0.01);
+}
+
+function existingMetricWeightMatches(weightKg, weightLb) {
+  const parsedWeightKg = parseOptionalNumber(weightKg);
+
+  if (parsedWeightKg === null || Number.isNaN(parsedWeightKg)) {
+    return false;
+  }
+
+  return conversionNumbersMatch(kgToLb(parsedWeightKg), weightLb, 0.01);
+}
+
+function splitCentimetresToFeetInches(heightCm) {
+  const totalInches = heightCm/2.54;
+  let feet = Math.floor(totalInches/12);
+  let inches = totalInches - (feet * 12);
+
+  if (Math.round(inches * 1000)/1000 >= 12) {
+    feet += 1;
+    inches = 0;
+  }
+
+  return {
+    feet: String(feet),
+    inches: formatConvertedInches(inches),
+  };
+}
+
+function convertUnitInputValues(input, fromUnitSystem, toUnitSystem) {
+  const converted = {};
+
+  if (fromUnitSystem === toUnitSystem) {
+    return converted;
+  }
+
+  if (fromUnitSystem === "metric" && toUnitSystem === "imperial") {
+    const heightCm = parseValidConversionNumber(input.heightCm, 100, 250);
+    const weightKg = parseValidConversionNumber(input.weightKg, 30, 300);
+    const knownLeanMassKg = parseValidConversionNumber(input.knownLeanMassKg, 0.1, 300);
+
+    if (heightCm !== null && !existingImperialHeightMatches(input, heightCm)) {
+      Object.assign(converted, splitCentimetresToFeetInches(heightCm));
+    }
+
+    if (weightKg !== null && !existingImperialWeightMatches(input.weightLb, weightKg)) {
+      converted.weightLb = formatConvertedNumber(kgToLb(weightKg));
+    }
+
+    if (knownLeanMassKg !== null && !existingImperialWeightMatches(input.knownLeanMassLb, knownLeanMassKg)) {
+      converted.knownLeanMassLb = formatConvertedNumber(kgToLb(knownLeanMassKg));
+    }
+  }
+
+  if (fromUnitSystem === "imperial" && toUnitSystem === "metric") {
+    const feet = parseValidConversionNumber(input.feet, 3, 8);
+    const inchesInput = parseOptionalNumber(input.inches);
+    const inches = inchesInput === null ? 0 : inchesInput;
+    const weightLb = parseValidConversionNumber(input.weightLb, 66, 660);
+    const knownLeanMassLb = parseValidConversionNumber(input.knownLeanMassLb, 0.1, 660);
+
+    if (
+      feet !== null
+      && !Number.isNaN(inches)
+      && inches >= 0
+      && inches < 12
+      && !existingMetricHeightMatches(input, feet, inches)
+    ) {
+      converted.heightCm = formatConvertedCentimetres(((feet * 12) + inches) * 2.54);
+    }
+
+    if (weightLb !== null && !existingMetricWeightMatches(input.weightKg, weightLb)) {
+      converted.weightKg = formatConvertedNumber(lbToKg(weightLb));
+    }
+
+    if (knownLeanMassLb !== null && !existingMetricWeightMatches(input.knownLeanMassKg, knownLeanMassLb)) {
+      converted.knownLeanMassKg = formatConvertedNumber(lbToKg(knownLeanMassLb));
+    }
+  }
+
+  return converted;
+}
+
 function gPerKgToGPerLb(value) {
   return Math.round((value/2.20462) * 100)/100;
 }
@@ -691,8 +854,8 @@ function calculateProtein(input) {
       errors.push("Feet must be between 3 and 8.");
     }
 
-    if (Number.isNaN(inches) || inches < 0 || inches > 11) {
-      errors.push("Inches must be between 0 and 11.");
+    if (Number.isNaN(inches) || inches < 0 || inches >= 12) {
+      errors.push("Inches must be at least 0 and less than 12.");
     }
 
     if (weightLb === null) {
@@ -1107,17 +1270,17 @@ function formatFeetInchesFromMeters(heightM) {
   const totalInches = heightM/0.0254;
   const feet = Math.floor(totalInches/12);
   const inches = totalInches - (feet * 12);
-  return `${feet} ft ${roundToOne(inches)} in`;
+  return `${feet} ft ${formatConvertedInches(inches)} in`;
 }
 
 function formatInputHeight(result) {
   const heightCm = result.body.heightM * 100;
 
   if (result.input.unitSystem === "metric") {
-    return `${roundToOne(heightCm)} cm (${formatFeetInchesFromMeters(result.body.heightM)})`;
+    return `${formatConvertedCentimetres(heightCm)} cm (${formatFeetInchesFromMeters(result.body.heightM)})`;
   }
 
-  return `${formatFeetInchesFromMeters(result.body.heightM)} (${roundToOne(heightCm)} cm)`;
+  return `${formatFeetInchesFromMeters(result.body.heightM)} (${formatConvertedCentimetres(heightCm)} cm)`;
 }
 
 function formatInputWeight(result) {
@@ -1252,7 +1415,9 @@ function buildSummaryReport(result, href) {
     "Inputs used:",
     `Goal: ${result.input.goalLabel}`,
     `Diet phase: ${formatDietPhase(result)}`,
+    `Height: ${formatInputHeight(result)}`,
     `Body weight: ${formatWeightForUser(result, result.body.weightKg)}`,
+    `BMI: ${result.body.bmi.toFixed(1)}`,
   ];
 
   if (result.body.bodyFatPercentUsed !== null) {
@@ -1310,8 +1475,9 @@ function buildTextReport(result, href) {
     `- Default target: ${formatProtein(result.selected.display.defaultTarget)}`,
     "",
     "Body-composition context",
-    `- BMI: ${result.body.bmi.toFixed(1)}`,
+    `- Height: ${formatInputHeight(result)}`,
     `- Current body weight: ${formatWeightForUser(result, result.body.weightKg)}`,
+    `- BMI: ${result.body.bmi.toFixed(1)}`,
   ];
 
   if (result.body.fatMassKg !== null) {
@@ -1400,8 +1566,9 @@ function buildMarkdownReport(result, href) {
     "",
     "## Body-Composition Context",
     "",
-    `- **BMI:** ${result.body.bmi.toFixed(1)}`,
+    `- **Height:** ${formatInputHeight(result)}`,
     `- **Current body weight:** ${formatWeightForUser(result, result.body.weightKg)}`,
+    `- **BMI:** ${result.body.bmi.toFixed(1)}`,
   ];
 
   if (result.body.fatMassKg !== null) {
@@ -1520,8 +1687,8 @@ function setActionStatus(message) {
 }
 
 function formatWeightForUser(result, kg) {
-  const kgValue = roundToOne(kg);
-  const lbValue = roundToOne(kgToLb(kg));
+  const kgValue = formatConvertedNumber(kg);
+  const lbValue = formatConvertedNumber(kgToLb(kg));
 
   if (result.input.unitSystem === "imperial") {
     return `${lbValue} lb (${kgValue} kg)`;
@@ -1582,6 +1749,7 @@ function estimateRow(estimate, result) {
 
 function renderResults(result, container) {
   const bodyRows = [
+    ["Height", formatInputHeight(result)],
     ["Current body weight", formatWeightForUser(result, result.body.weightKg)],
     ["BMI", result.body.bmi.toFixed(1)],
   ];
@@ -1747,6 +1915,24 @@ function setNamedFormValue(form, name, value) {
   }
 
   control.value = value;
+}
+
+function setConvertedFormValue(form, name, value) {
+  setNamedFormValue(form, name, value);
+
+  form.querySelectorAll(`[name="${name}"]`).forEach((control) => {
+    clearFieldState(control);
+  });
+}
+
+function convertFormUnitValues(form, fromUnitSystem, toUnitSystem) {
+  const converted = convertUnitInputValues(getFormInput(form), fromUnitSystem, toUnitSystem);
+
+  Object.entries(converted).forEach(([name, value]) => {
+    setConvertedFormValue(form, name, value);
+  });
+
+  return converted;
 }
 
 function applyShareStateToForm(form, state) {
@@ -2077,9 +2263,16 @@ function initCalculator() {
   const goalSelect = form.querySelector('select[name="goal"]');
   const knownLeanMassMethodSelect = form.querySelector('select[name="knownLeanMassMethod"]');
   const immediateValidationFields = form.querySelectorAll('select[name="goal"], select[name="knownLeanMassMethod"], input[name="weightKg"], input[name="weightLb"], input[name="bodyFatPercent"], input[name="knownLeanMassKg"], input[name="knownLeanMassLb"], input[name="knownLeanMassCustomMethod"], input[name="targetBodyFatPercent"]');
+  let activeUnitSystem = form.querySelector('input[name="unitSystem"]:checked')?.value || "metric";
 
   unitInputs.forEach((input) => {
     input.addEventListener("change", () => {
+      if (!input.checked) {
+        return;
+      }
+
+      convertFormUnitValues(form, activeUnitSystem, input.value);
+      activeUnitSystem = input.value;
       setUnitVisibility(input.value);
       renderImmediateInputMessages(form, messages);
     });
@@ -2144,10 +2337,13 @@ function initCalculator() {
     }
 
     renderImmediateInputMessages(form, messages);
-    return calculateAndRender({ shouldScroll, shouldUpdateShareUrl: false });
+    const calculated = calculateAndRender({ shouldScroll, shouldUpdateShareUrl: false });
+    activeUnitSystem = form.querySelector('input[name="unitSystem"]:checked')?.value || activeUnitSystem;
+    return calculated;
   };
 
   applySharedStateFromHash();
+  activeUnitSystem = form.querySelector('input[name="unitSystem"]:checked')?.value || activeUnitSystem;
 
   window.addEventListener("hashchange", () => {
     applySharedStateFromHash();
@@ -2231,6 +2427,7 @@ if (typeof module !== "undefined") {
     buildSummaryReport,
     buildTextReport,
     calculateProtein,
+    convertUnitInputValues,
     describeMethodSensitivity,
     describeMethodSensitivityShort,
     getDietPhaseOptionsForGoal,

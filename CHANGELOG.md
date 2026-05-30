@@ -10,10 +10,18 @@ All notable changes to this project will be documented in this file.
 - Added README deployment instructions for the static GitHub Pages setup.
 - Updated README testing coverage wording.
 - Clarified adjusted-estimate and reduced-precision fallback wording now that known lean body mass can substitute for body-fat percentage in adjusted calculations.
+- Clarified height/BMI and lean/fat-free-mass tooltip wording in the calculator.
+- Tightened metric/imperial height, weight, and known-lean-mass conversion precision to avoid visible round-trip drift when switching units.
+- Preserved equivalent existing target-unit values when switching units back without editing converted fields.
+- Added height to body-composition context and compact summary exports.
+- Aligned result and report unit-conversion displays with the unit-switching conversion precision.
+- Documented unit-switch conversion behavior and unchanged fields in the public calculation method.
+- Added BMI to compact summary exports.
 
 ### Added
 
 - Added static regression checks for README deployment wording and mobile result-action button layout.
+- Added automatic metric/imperial conversion for valid height, weight, and known lean body mass entries when switching unit systems.
 
 ## [0.1.3] - 2026-05-30
 

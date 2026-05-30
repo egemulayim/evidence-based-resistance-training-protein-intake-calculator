@@ -11,6 +11,7 @@ const {
   buildSummaryReport,
   buildTextReport,
   calculateProtein,
+  convertUnitInputValues,
   describeMethodSensitivity,
   describeMethodSensitivityShort,
   getDietPhaseOptionsForGoal,
@@ -106,6 +107,133 @@ test("imperial inputs are converted internally to kilograms", () => {
     rangeHigh: 180,
     defaultTarget: 155,
   });
+});
+
+test("unit toggle conversion prepares the newly selected unit fields", () => {
+  assert.deepEqual(convertUnitInputValues({
+    heightCm: "181",
+    weightKg: "101.2",
+    knownLeanMassKg: "74.2",
+  }, "metric", "imperial"), {
+    feet: "5",
+    inches: "11.26",
+    weightLb: "223.11",
+    knownLeanMassLb: "163.58",
+  });
+
+  assert.deepEqual(convertUnitInputValues({
+    feet: "5",
+    inches: "11.26",
+    weightLb: "223.11",
+    knownLeanMassLb: "163.58",
+  }, "imperial", "metric"), {
+    heightCm: "181",
+    weightKg: "101.2",
+    knownLeanMassKg: "74.2",
+  });
+
+  assert.deepEqual(convertUnitInputValues({
+    heightCm: "100.4",
+  }, "metric", "imperial"), {
+    feet: "3",
+    inches: "3.528",
+  });
+
+  assert.deepEqual(convertUnitInputValues({
+    feet: "3",
+    inches: "3.528",
+  }, "imperial", "metric"), {
+    heightCm: "100.4",
+  });
+
+  assert.deepEqual(convertUnitInputValues({
+    feet: "5",
+    inches: "11",
+  }, "imperial", "metric"), {
+    heightCm: "180.34",
+  });
+
+  assert.deepEqual(convertUnitInputValues({
+    heightCm: "180.34",
+  }, "metric", "imperial"), {
+    feet: "5",
+    inches: "11",
+  });
+});
+
+test("unit toggle conversion preserves equivalent existing target fields", () => {
+  assert.deepEqual(convertUnitInputValues({
+    heightCm: "181",
+    weightKg: "101.2",
+    knownLeanMassKg: "74.2",
+    feet: "5",
+    inches: "11.26",
+    weightLb: "223.11",
+    knownLeanMassLb: "163.58",
+  }, "imperial", "metric"), {});
+
+  assert.deepEqual(convertUnitInputValues({
+    heightCm: "180.34",
+    weightKg: "36.29",
+    knownLeanMassKg: "30",
+    feet: "5",
+    inches: "11",
+    weightLb: "80",
+    knownLeanMassLb: "66.14",
+  }, "metric", "imperial"), {});
+
+  assert.deepEqual(convertUnitInputValues({
+    heightCm: "181",
+    weightKg: "101.2",
+    knownLeanMassKg: "74.2",
+    feet: "5",
+    inches: "11.3",
+    weightLb: "223.11",
+    knownLeanMassLb: "163.58",
+  }, "imperial", "metric"), {
+    heightCm: "181.1",
+  });
+});
+
+test("unit toggle conversion ignores invalid source fields", () => {
+  assert.deepEqual(convertUnitInputValues({
+    heightCm: "99",
+    weightKg: "abc",
+    knownLeanMassKg: "",
+  }, "metric", "imperial"), {});
+
+  assert.deepEqual(convertUnitInputValues({
+    feet: "2",
+    inches: "12",
+    weightLb: "50",
+    knownLeanMassLb: "abc",
+  }, "imperial", "metric"), {});
+});
+
+test("imperial decimal inches below twelve are valid", () => {
+  const result = calculateProtein({
+    unitSystem: "imperial",
+    feet: "5",
+    inches: "11.3",
+    weightLb: "223.1",
+    goal: "maintenance",
+    trainingDays: "3-4",
+  });
+
+  assertOk(result);
+  assert.equal(roundToOne(result.body.heightM * 100), 181.1);
+
+  const invalid = calculateProtein({
+    unitSystem: "imperial",
+    feet: "5",
+    inches: "12",
+    weightLb: "223.1",
+    goal: "maintenance",
+    trainingDays: "3-4",
+  });
+
+  assert.equal(invalid.ok, false);
+  assert.match(invalid.errors.join("\n"), /less than 12/);
 });
 
 test("maintenance remains current-body-weight based and ignores target body fat", () => {
@@ -675,7 +803,9 @@ test("reports include method sensitivity after estimate comparison", () => {
   assert.match(textReport, /Method sensitivity\n- The available methods differ by 20 g\/day/);
   assert.match(markdownReport, /### Method Sensitivity\n\nThe available methods differ by 20 g\/day/);
   assert.match(textReport, /Open this calculation\nhttps:\/\/egemulayim\.github\.io\/evidence-based-resistance-training-protein-intake-calculator\/#pc=1&/);
+  assert.match(textReport, /Body-composition context\n- Height: 181 cm \(5 ft 11\.26 in\)\n- Current body weight: 101 kg \(222\.67 lb\)\n- BMI: 30\.8/);
   assert.match(markdownReport, /## Open This Calculation\n\nhttps:\/\/egemulayim\.github\.io\/evidence-based-resistance-training-protein-intake-calculator\/#pc=1&/);
+  assert.match(markdownReport, /## Body-Composition Context\n\n- \*\*Height:\*\* 181 cm \(5 ft 11\.26 in\)\n- \*\*Current body weight:\*\* 101 kg \(222\.67 lb\)\n- \*\*BMI:\*\* 30\.8/);
 });
 
 test("summary report includes compact result and share link", () => {
@@ -695,6 +825,9 @@ test("summary report includes compact result and share link", () => {
   assert.match(summary, /Basis: Composite lean-mass\/goal-weight fat-loss basis/);
   assert.match(summary, /Goal: Fat loss while resistance training/);
   assert.match(summary, /Diet phase: Moderate deficit/);
+  assert.match(summary, /Height: 181 cm \(5 ft 11\.26 in\)/);
+  assert.match(summary, /Body weight: 101 kg \(222\.67 lb\)/);
+  assert.match(summary, /BMI: 30\.8/);
   assert.match(summary, /Body-fat used: 26%/);
   assert.match(summary, /Goal-weight estimate: 93.4 kg/);
   assert.match(summary, /Method sensitivity: Available methods differ by 20 g\/day/);
@@ -738,6 +871,8 @@ test("share URLs use hash state for static hosting", () => {
 
   assert.equal(parsedUrl.search, "");
   assert.match(parsedUrl.hash, /^#pc=1&/);
+  assert.match(parsedUrl.hash, /feet=6/);
+  assert.match(parsedUrl.hash, /inches=1/);
   assert.match(parsedUrl.hash, /trainingDays=5%2B/);
   assert.deepEqual(parseShareState(parsedUrl.hash), {
     unitSystem: "imperial",

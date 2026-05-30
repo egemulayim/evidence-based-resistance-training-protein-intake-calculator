@@ -24,6 +24,10 @@ Display units follow the user's input system:
 - Metric users see kilograms first, with pounds in parentheses.
 - Imperial users see pounds first, with kilograms in parentheses.
 
+When the unit system is switched, valid height, current body weight, and known lean body mass values are converted into the newly selected unit fields. Body-fat percentage, target body-fat percentage, goal, diet phase, training frequency, meals per day, and lean-mass source labels are not changed by the unit switch.
+
+If the converted fields already contain equivalent values from a previous switch, the calculator preserves those values when switching back. This prevents visible round-trip drift from unit-conversion rounding while keeping the scientific calculation in kilograms.
+
 For imperial users, the calculator also gives gram-per-pound equivalents in some explanatory text. The calculation itself still uses the source gram-per-kilogram multipliers.
 
 ## Body-Composition Estimates

@@ -68,6 +68,7 @@ Scientific multipliers use kilograms internally because the literature is expres
 
 - Maintenance: current body weight, using 1.4 g/kg/day minimum and a 1.6-2.0 g/kg/day practical range.
 - Muscle gain/hypertrophy: current body weight, using 1.6 g/kg/day minimum and a 1.6-2.2 g/kg/day practical range.
+- Switching unit systems converts valid height, weight, and known lean body mass entries between metric and imperial fields.
 - Fat loss and recomposition: goal and diet phase intensity both control the multipliers.
 - Diet phase is hidden for maintenance and muscle-gain goals.
 - Diet phase options: fat loss uses moderate deficit or aggressive cut/lean athlete context; recomposition uses maintenance/slight deficit or moderate deficit.

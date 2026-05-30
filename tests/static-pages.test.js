@@ -50,14 +50,17 @@ test("index page links GitHub and scopes target body fat to fat loss/recomp", ()
   const html = read("index.html");
 
   assert.match(html, new RegExp(`<a class="back-link" href="${repoHref}" target="_blank" rel="noopener">GitHub</a>`));
+  assert.match(html, /Switching units converts valid height, weight, and known lean-mass entries, while body-fat, goal, phase, and meal fields stay unchanged/);
+  assert.match(html, /BMI depends on the height entered, so a 1 cm difference can slightly change the result/);
+  assert.match(html, /BMI depends on the height entered, so a small height difference can slightly change the result/);
   assert.match(html, /<summary>Use known lean body mass<\/summary>/);
   assert.match(html, /Body-fat percentage or known lean body mass enables adjusted fat-loss and recomposition estimates/);
+  assert.match(html, /Do not enter muscle mass here; lean\/fat-free mass includes all non-fat tissue, not just muscle/);
   assert.match(html, /name="knownLeanMassKg"/);
   assert.match(html, /name="knownLeanMassLb"/);
   assert.match(html, /name="knownLeanMassMethod"/);
   assert.match(html, /id="known-lean-mass-custom-method-field" hidden/);
   assert.match(html, /name="knownLeanMassCustomMethod"/);
-  assert.match(html, /This value is used before body-fat percentage for adjusted estimates/);
   assert.match(html, /<span class="field-note">Report Only<\/span>/);
   assert.match(html, /It does not change the calculation/);
   assert.match(html, /<div class="field" id="target-body-fat-field" hidden>/);
@@ -91,6 +94,18 @@ test("public docs document target-body-fat scope and bulk-model requirements", (
     assert.match(contents, /target body weight/i);
     assert.match(contents, /projected lean-mass gain/i);
     assert.match(contents, /fat:lean gain split/i);
+  }
+});
+
+test("public docs document unit-switch conversion behavior", () => {
+  const publicDocs = read("docs/CALCULATION.md");
+  const calculationPage = read("calculation.html");
+
+  for (const contents of [publicDocs, calculationPage]) {
+    assert.match(contents, /valid height, current body weight, and known lean body mass values are converted/i);
+    assert.match(contents, /Body-fat percentage, target body-fat percentage, goal, diet phase, training frequency, meals per day, and lean-mass source labels are not changed/i);
+    assert.match(contents, /preserves those values when switching back/i);
+    assert.match(contents, /prevents visible round-trip drift/i);
   }
 });
 
