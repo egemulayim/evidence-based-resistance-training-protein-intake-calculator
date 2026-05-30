@@ -4,12 +4,124 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
+const zlib = require("node:zlib");
 
 const repoRoot = path.resolve(__dirname, "..");
 const repoHref = "https://github.com/egemulayim/evidence-based-resistance-training-protein-intake-calculator";
 
 function read(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+function readBinary(relativePath) {
+  return fs.readFileSync(path.join(repoRoot, relativePath));
+}
+
+function paethPredictor(left, up, upperLeft) {
+  const prediction = left + up - upperLeft;
+  const leftDistance = Math.abs(prediction - left);
+  const upDistance = Math.abs(prediction - up);
+  const upperLeftDistance = Math.abs(prediction - upperLeft);
+
+  if (leftDistance <= upDistance && leftDistance <= upperLeftDistance) {
+    return left;
+  }
+
+  if (upDistance <= upperLeftDistance) {
+    return up;
+  }
+
+  return upperLeft;
+}
+
+function pngRgbaInfo(relativePath) {
+  const contents = readBinary(relativePath);
+  const signature = contents.subarray(0, 8).toString("hex");
+  const idatChunks = [];
+  let offset = 8;
+  let width = null;
+  let height = null;
+  let colorType = null;
+
+  assert.equal(signature, "89504e470d0a1a0a");
+
+  while (offset < contents.length) {
+    const length = contents.readUInt32BE(offset);
+    const type = contents.toString("ascii", offset + 4, offset + 8);
+    const data = contents.subarray(offset + 8, offset + 8 + length);
+
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      colorType = data[9];
+    }
+
+    if (type === "IDAT") {
+      idatChunks.push(data);
+    }
+
+    offset += length + 12;
+  }
+
+  assert.equal(colorType, 6);
+
+  const inflated = zlib.inflateSync(Buffer.concat(idatChunks));
+  const rowStride = width * 4;
+  let inputOffset = 0;
+  let previousRow = Buffer.alloc(rowStride);
+  let minAlpha = 255;
+  const corners = [];
+
+  for (let y = 0; y < height; y += 1) {
+    const filter = inflated[inputOffset];
+    inputOffset += 1;
+    const row = Buffer.alloc(rowStride);
+
+    for (let x = 0; x < rowStride; x += 1) {
+      const left = x >= 4 ? row[x - 4] : 0;
+      const up = previousRow[x];
+      const upperLeft = x >= 4 ? previousRow[x - 4] : 0;
+      let value = inflated[inputOffset];
+      inputOffset += 1;
+
+      if (filter === 1) {
+        value += left;
+      } else if (filter === 2) {
+        value += up;
+      } else if (filter === 3) {
+        value += Math.floor((left + up)/2);
+      } else if (filter === 4) {
+        value += paethPredictor(left, up, upperLeft);
+      }
+
+      row[x] = value & 255;
+    }
+
+    for (let x = 3; x < rowStride; x += 4) {
+      minAlpha = Math.min(minAlpha, row[x]);
+    }
+
+    if (y === 0 || y === height - 1) {
+      for (const x of [0, width - 1]) {
+        const pixelOffset = x * 4;
+        corners.push([
+          row[pixelOffset],
+          row[pixelOffset + 1],
+          row[pixelOffset + 2],
+          row[pixelOffset + 3],
+        ]);
+      }
+    }
+
+    previousRow = row;
+  }
+
+  return {
+    width,
+    height,
+    minAlpha,
+    corners,
+  };
 }
 
 function listProjectTextFiles(directory = repoRoot) {
@@ -142,14 +254,14 @@ test("public docs document method sensitivity interpretation", () => {
 test("README documents static GitHub Pages deployment", () => {
   const readme = read("README.md");
 
-  assert.match(readme, /Status: Version 1\.0\.0 stable\./);
+  assert.match(readme, /Status: Version 1\.0\.1 stable\./);
   assert.match(readme, /## Deployment/);
   assert.match(readme, /static files from the `main` branch root with GitHub Pages/i);
   assert.match(readme, /No build command/i);
   assert.match(readme, /without server-side routing/i);
 });
 
-test("static pages include favicon and share-preview metadata", () => {
+test("static pages include favicon, home-screen icons, and share-preview metadata", () => {
   const pages = [
     {
       file: "index.html",
@@ -170,6 +282,11 @@ test("static pages include favicon and share-preview metadata", () => {
 
     assert.ok(html.includes(`<link rel="canonical" href="${page.canonical}">`));
     assert.match(html, /<link rel="icon" href="favicon\.svg" type="image\/svg\+xml">/);
+    assert.match(html, /<link rel="apple-touch-icon" sizes="180x180" href="icons\/apple-touch-icon\.png">/);
+    assert.match(html, /<link rel="manifest" href="site\.webmanifest">/);
+    assert.match(html, /<meta name="apple-mobile-web-app-title" content="Protein Calculator">/);
+    assert.match(html, /<meta name="apple-mobile-web-app-capable" content="yes">/);
+    assert.match(html, /<meta name="mobile-web-app-capable" content="yes">/);
     assert.match(html, /<meta name="application-name" content="Evidence-Based Resistance Training Protein Intake Calculator">/);
     assert.match(html, /<meta property="og:type" content="website">/);
     assert.match(html, /<meta property="og:site_name" content="Evidence-Based Resistance Training Protein Intake Calculator">/);
@@ -182,6 +299,49 @@ test("static pages include favicon and share-preview metadata", () => {
   }
 
   assert.match(read("favicon.svg"), /<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 64 64">/);
+});
+
+test("web app manifest points at generated PNG home-screen icons", () => {
+  const manifest = JSON.parse(read("site.webmanifest"));
+
+  assert.equal(manifest.id, "./");
+  assert.equal(manifest.name, "Evidence-Based Resistance Training Protein Intake Calculator");
+  assert.equal(manifest.short_name, "Protein Calc");
+  assert.equal(manifest.start_url, "./");
+  assert.equal(manifest.scope, "./");
+  assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.background_color, "#0b1110");
+  assert.equal(manifest.theme_color, "#0b1110");
+  assert.deepEqual(manifest.icons, [
+    {
+      src: "icons/icon-192.png",
+      sizes: "192x192",
+      type: "image/png",
+    },
+    {
+      src: "icons/icon-512.png",
+      sizes: "512x512",
+      type: "image/png",
+    },
+  ]);
+
+  for (const [iconPath, size] of [
+    ["icons/apple-touch-icon.png", 180],
+    ["icons/icon-192.png", 192],
+    ["icons/icon-512.png", 512],
+  ]) {
+    const icon = pngRgbaInfo(iconPath);
+
+    assert.equal(icon.width, size);
+    assert.equal(icon.height, size);
+    assert.equal(icon.minAlpha, 255);
+    assert.deepEqual(icon.corners, [
+      [16, 34, 30, 255],
+      [16, 34, 30, 255],
+      [16, 34, 30, 255],
+      [16, 34, 30, 255],
+    ]);
+  }
 });
 
 test("mobile result styles avoid result-only horizontal overflow", () => {

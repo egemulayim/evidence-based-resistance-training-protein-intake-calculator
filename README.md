@@ -2,7 +2,7 @@
 
 A small static calculator for estimating daily protein intake for generally healthy adults who perform resistance training and have body-composition goals.
 
-Status: Version 1.0.0 stable.
+Status: Version 1.0.1 stable.
 
 The interface starts from the user's system light or dark mode setting, with a persistent manual light/dark toggle.
 
@@ -21,6 +21,11 @@ GitHub Pages URL: https://egemulayim.github.io/evidence-based-resistance-trainin
 +-- styles.css
 +-- script.js
 +-- favicon.svg
++-- site.webmanifest
++-- icons/
+|   +-- apple-touch-icon.png
+|   +-- icon-192.png
+|   `-- icon-512.png
 +-- package.json
 +-- README.md
 +-- CHANGELOG.md

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-05-30
+
+### Added
+
+- Added mobile home-screen icon metadata, an Apple touch icon, and PNG manifest icons for Add to Home Screen flows.
+- Made generated PNG install icons use an opaque background so phone home-screen masks do not expose transparent corners.
+
 ## [1.0.0] - 2026-05-30
 
 ### Changed
