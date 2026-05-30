@@ -17,11 +17,13 @@ All notable changes to this project will be documented in this file.
 - Aligned result and report unit-conversion displays with the unit-switching conversion precision.
 - Documented unit-switch conversion behavior and unchanged fields in the public calculation method.
 - Added BMI to compact summary exports.
+- Added a public README status line for the stable Version 1 release.
 
 ### Added
 
 - Added static regression checks for README deployment wording and mobile result-action button layout.
 - Added automatic metric/imperial conversion for valid height, weight, and known lean body mass entries when switching unit systems.
+- Added a static SVG favicon and share-preview metadata for the calculator and calculation method pages.
 
 ## [0.1.3] - 2026-05-30
 

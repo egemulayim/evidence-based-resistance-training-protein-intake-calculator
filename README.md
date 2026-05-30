@@ -2,6 +2,8 @@
 
 A small static calculator for estimating daily protein intake for generally healthy adults who perform resistance training and have body-composition goals.
 
+Status: Version 1.0.0 stable.
+
 The interface starts from the user's system light or dark mode setting, with a persistent manual light/dark toggle.
 
 The calculator is intentionally narrow: it is not a full macro calculator, meal planner, clinical nutrition tool, or general sedentary-population protein calculator. It shows the calculation basis so users can see whether the estimate came from current body weight, lean-mass adjustment, target-body-fat context, or diet phase intensity.
@@ -18,6 +20,7 @@ GitHub Pages URL: https://egemulayim.github.io/evidence-based-resistance-trainin
 +-- calculation.html
 +-- styles.css
 +-- script.js
++-- favicon.svg
 +-- package.json
 +-- README.md
 +-- CHANGELOG.md

@@ -142,10 +142,46 @@ test("public docs document method sensitivity interpretation", () => {
 test("README documents static GitHub Pages deployment", () => {
   const readme = read("README.md");
 
+  assert.match(readme, /Status: Version 1\.0\.0 stable\./);
   assert.match(readme, /## Deployment/);
   assert.match(readme, /static files from the `main` branch root with GitHub Pages/i);
   assert.match(readme, /No build command/i);
   assert.match(readme, /without server-side routing/i);
+});
+
+test("static pages include favicon and share-preview metadata", () => {
+  const pages = [
+    {
+      file: "index.html",
+      canonical: "https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/",
+      title: "Evidence-Based Resistance Training Protein Intake Calculator",
+      description: "Estimate daily protein intake for resistance-training goals with transparent, client-side calculations.",
+    },
+    {
+      file: "calculation.html",
+      canonical: "https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/calculation.html",
+      title: "Calculation Method | Evidence-Based Resistance Training Protein Intake Calculator",
+      description: "Review the assumptions, equations, evidence basis, and limits behind the resistance-training protein intake calculator.",
+    },
+  ];
+
+  for (const page of pages) {
+    const html = read(page.file);
+
+    assert.ok(html.includes(`<link rel="canonical" href="${page.canonical}">`));
+    assert.match(html, /<link rel="icon" href="favicon\.svg" type="image\/svg\+xml">/);
+    assert.match(html, /<meta name="application-name" content="Evidence-Based Resistance Training Protein Intake Calculator">/);
+    assert.match(html, /<meta property="og:type" content="website">/);
+    assert.match(html, /<meta property="og:site_name" content="Evidence-Based Resistance Training Protein Intake Calculator">/);
+    assert.ok(html.includes(`<meta property="og:title" content="${page.title}">`));
+    assert.ok(html.includes(`<meta property="og:description" content="${page.description}">`));
+    assert.ok(html.includes(`<meta property="og:url" content="${page.canonical}">`));
+    assert.match(html, /<meta name="twitter:card" content="summary">/);
+    assert.ok(html.includes(`<meta name="twitter:title" content="${page.title}">`));
+    assert.ok(html.includes(`<meta name="twitter:description" content="${page.description}">`));
+  }
+
+  assert.match(read("favicon.svg"), /<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 64 64">/);
 });
 
 test("mobile result styles avoid result-only horizontal overflow", () => {
