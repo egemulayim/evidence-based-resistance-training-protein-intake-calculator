@@ -51,6 +51,7 @@ test("index page links GitHub and scopes target body fat to fat loss/recomp", ()
 
   assert.match(html, new RegExp(`<a class="back-link" href="${repoHref}" target="_blank" rel="noopener">GitHub</a>`));
   assert.match(html, /<summary>Use known lean body mass<\/summary>/);
+  assert.match(html, /Body-fat percentage or known lean body mass enables adjusted fat-loss and recomposition estimates/);
   assert.match(html, /name="knownLeanMassKg"/);
   assert.match(html, /name="knownLeanMassLb"/);
   assert.match(html, /name="knownLeanMassMethod"/);
@@ -106,6 +107,7 @@ test("public docs document known lean-mass behavior and measurement caveats", ()
     assert.match(contents, /reporting and interpretation only/i);
     assert.match(contents, /do not change the formula|does not change the formula/i);
     assert.match(contents, /custom name/i);
+    assert.match(contents, /neither body-fat percentage nor known lean body mass/i);
   }
 });
 

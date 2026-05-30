@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Promoted the completed Version 1 app to stable `1.0.0`.
 - Added README deployment instructions for the static GitHub Pages setup.
 - Updated README testing coverage wording.
+- Clarified adjusted-estimate and reduced-precision fallback wording now that known lean body mass can substitute for body-fat percentage in adjusted calculations.
 
 ### Added
 

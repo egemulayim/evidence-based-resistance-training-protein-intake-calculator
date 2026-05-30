@@ -175,7 +175,7 @@ rangeLow = max(leanBodyMassKg * 2.0, adjustedBasisKg * 1.7)
 rangeHigh = max(leanBodyMassKg * 2.3, adjustedBasisKg * 1.9)</code></pre>
 
           <p>
-            If body-fat percentage is missing, the calculator uses a reduced-precision current-weight fallback. Body-fat percentage is especially important for aggressive cutting because that model is based on lean-mass scaling.
+            If neither body-fat percentage nor known lean body mass is supplied, the calculator uses a reduced-precision current-weight fallback. Body-composition input is especially important for aggressive cutting because that model is based on lean-mass scaling.
           </p>
           <pre><code>fat loss, moderate deficit:
 minimum = weightKg * 1.6

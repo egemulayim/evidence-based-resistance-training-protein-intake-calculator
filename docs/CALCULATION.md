@@ -163,7 +163,7 @@ rangeHigh = max(leanBodyMassKg * 2.3, adjustedBasisKg * 1.9)
 
 Aggressive cut/lean athlete context is intentionally not a recomposition option in the interface. That context belongs under fat loss because substantial energy restriction is not classic recomp framing.
 
-If body-fat percentage is not supplied, the calculator falls back to a current-weight estimate:
+If neither body-fat percentage nor known lean body mass is supplied, the calculator falls back to a reduced-precision current-weight estimate:
 
 ```text
 fat loss, moderate deficit:
