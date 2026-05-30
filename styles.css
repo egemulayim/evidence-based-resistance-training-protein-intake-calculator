@@ -443,6 +443,8 @@ input,
 select,
 button {
   font: inherit;
+  font-size: 1rem;
+  touch-action: manipulation;
 }
 
 input,
@@ -706,6 +708,7 @@ select[aria-invalid="true"] {
 }
 
 .methodology-summary {
+  width: 100%;
   margin: 32px 0 18px;
   padding: 28px;
   border: 1px solid var(--border);
@@ -728,6 +731,7 @@ select[aria-invalid="true"] {
 }
 
 .disclaimer {
+  width: 100%;
   margin: 14px 0 32px;
   color: var(--muted);
   font-size: 0.92rem;
@@ -902,6 +906,11 @@ select[aria-invalid="true"] {
   .methodology-summary,
   .doc-article {
     padding: 18px;
+  }
+
+  .summary-content {
+    max-width: none;
+    width: 100%;
   }
 
   .title-row {

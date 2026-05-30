@@ -7,6 +7,7 @@ const {
   buildMarkdownReport,
   buildTextReport,
   calculateProtein,
+  getDietPhaseOptionsForGoal,
   getTargetBodyFatRelationshipNotice,
   roundToNearestFive,
   roundToOne,
@@ -45,6 +46,19 @@ test("rounding helpers use the calculator's practical display rules", () => {
   assert.equal(roundToNearestFive(162.5), 165);
   assert.equal(roundToNearestFive(0), 0);
   assert.equal(roundToOne(93.425), 93.4);
+});
+
+test("diet phase options only include phases that match the selected goal", () => {
+  assert.deepEqual(getDietPhaseOptionsForGoal("fat_loss"), [
+    { value: "moderate_deficit", label: "Moderate deficit" },
+    { value: "aggressive_cut", label: "Aggressive cut/lean athlete context" },
+  ]);
+  assert.deepEqual(getDietPhaseOptionsForGoal("recomposition"), [
+    { value: "recomposition_slight_deficit", label: "Maintenance/slight deficit" },
+    { value: "moderate_deficit", label: "Moderate deficit" },
+  ]);
+  assert.deepEqual(getDietPhaseOptionsForGoal("maintenance"), []);
+  assert.deepEqual(getDietPhaseOptionsForGoal("muscle_gain"), []);
 });
 
 test("metric parsing accepts comma decimals and returns body-composition context", () => {

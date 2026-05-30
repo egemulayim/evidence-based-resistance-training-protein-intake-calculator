@@ -174,6 +174,17 @@ function goalUsesTargetBodyFat(goal) {
   return goal === "fat_loss" || goal === "recomposition";
 }
 
+function getDietPhaseOptionsForGoal(goal) {
+  if (!goalUsesDietPhase(goal)) {
+    return [];
+  }
+
+  return (DIET_PHASES_BY_GOAL[goal] || []).map((value) => ({
+    value,
+    label: DIET_PHASE_LABELS[value],
+  }));
+}
+
 function getNoticeBodyFatPercent(input) {
   const unitSystem = input.unitSystem;
   let weightKg = null;
@@ -1446,30 +1457,27 @@ function setDietPhaseVisibility(goal) {
   const shouldShow = goalUsesDietPhase(goal);
   dietPhaseField.hidden = !shouldShow;
   dietPhaseSelect.disabled = !shouldShow;
+  const currentValue = dietPhaseSelect.value;
+  const placeholderOption = document.createElement("option");
+  placeholderOption.value = "";
+  placeholderOption.textContent = "Select phase intensity";
 
   if (!shouldShow) {
-    dietPhaseSelect.value = "";
+    dietPhaseSelect.replaceChildren(placeholderOption);
     return;
   }
 
-  const allowedPhases = DIET_PHASES_BY_GOAL[goal] || [];
-
-  Array.from(dietPhaseSelect.options).forEach((option) => {
-    if (!option.value) {
-      option.hidden = false;
-      option.disabled = false;
-      option.style.display = "";
-      return;
-    }
-
-    const isAllowed = allowedPhases.includes(option.value);
-    option.hidden = !isAllowed;
-    option.disabled = !isAllowed;
-    option.style.display = isAllowed ? "" : "none";
+  const options = getDietPhaseOptionsForGoal(goal).map(({ value, label }) => {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    return option;
   });
 
-  if (!allowedPhases.includes(dietPhaseSelect.value)) {
-    dietPhaseSelect.value = "";
+  dietPhaseSelect.replaceChildren(placeholderOption, ...options);
+
+  if (options.some((option) => option.value === currentValue)) {
+    dietPhaseSelect.value = currentValue;
   }
 }
 
@@ -1507,6 +1515,20 @@ function setKnownLeanMassCustomMethodVisibility(method) {
   if (!shouldShow) {
     customMethodInput.value = "";
   }
+}
+
+function scrollResultsIntoView(resultsPanel) {
+  if (!resultsPanel || typeof resultsPanel.scrollIntoView !== "function") {
+    return;
+  }
+
+  const shouldReduceMotion = window.matchMedia
+    && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  resultsPanel.scrollIntoView({
+    behavior: shouldReduceMotion ? "auto" : "smooth",
+    block: "start",
+  });
 }
 
 function getSystemTheme() {
@@ -1626,6 +1648,10 @@ function initCalculator() {
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+
     const result = calculateProtein(getFormInput(form));
     renderMessages(messages, result.errors, result.warnings);
 
@@ -1640,6 +1666,7 @@ function initCalculator() {
     latestResult = result;
     status.textContent = "Protein estimate calculated.";
     renderResults(result, resultsContent);
+    requestAnimationFrame(() => scrollResultsIntoView(resultsPanel));
   });
 
   resultsPanel.addEventListener("click", async (event) => {
@@ -1688,6 +1715,7 @@ if (typeof module !== "undefined") {
     buildMarkdownReport,
     buildTextReport,
     calculateProtein,
+    getDietPhaseOptionsForGoal,
     getTargetBodyFatRelationshipNotice,
     roundToNearestFive,
     roundToOne,

@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+- Rebuilt diet phase options per selected goal so unsupported phases disappear from mobile native pickers instead of appearing disabled.
+- Improved mobile result positioning by blurring the active control and scrolling the rendered results panel into view after calculation.
+- Made the mobile methodology summary and disclaimer span the same content width as the calculator panels.
 - Fixed invalid-input styling by replacing undefined danger color variables with the existing error color tokens.
 - Removed the generic known-lean-mass estimate caveat from warning notes.
 
