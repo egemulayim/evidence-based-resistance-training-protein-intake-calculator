@@ -668,16 +668,23 @@ select[aria-invalid="true"] {
 }
 
 .result-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
   min-width: 0;
   max-width: 100%;
   margin: 14px 0 0;
 }
 
+.compact-button {
+  min-width: 0;
+  padding-inline: 6px;
+  font-size: 0.86rem;
+  line-height: 1.15;
+}
+
 .action-status {
-  width: 100%;
+  grid-column: 1/-1;
   margin: 0;
   color: var(--muted);
   font-size: 0.9rem;

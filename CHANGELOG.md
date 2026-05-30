@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Added hash-based share links that restore form inputs, recalculate on load, and work on GitHub Pages without routing changes.
 - Added method sensitivity text to the on-page results and exported reports.
 - Added a reset button that clears all inputs, results, messages, and calculator share-link state.
+- Added a compact summary-copy action with the share link included at the end.
 
 ## [0.1.2] - 2026-05-30
 

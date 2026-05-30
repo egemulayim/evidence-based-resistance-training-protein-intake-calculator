@@ -1176,6 +1176,39 @@ function formatLeanMassSource(result) {
   return "Not available";
 }
 
+function getMethodSensitivitySpread(result) {
+  const estimates = reportEstimateRows(result);
+
+  if (estimates.length < 2) {
+    return null;
+  }
+
+  const defaultTargets = estimates.map((estimate) => estimate.display.defaultTarget);
+  return Math.max(...defaultTargets) - Math.min(...defaultTargets);
+}
+
+function describeMethodSensitivityShort(result) {
+  const spread = getMethodSensitivitySpread(result);
+
+  if (spread === null) {
+    return "Only one estimate method is available for these inputs.";
+  }
+
+  if (spread === 0) {
+    return "Available methods produce the same rounded default target.";
+  }
+
+  if (spread <= 20) {
+    return `Available methods differ by ${formatProtein(spread)} in rounded midpoint targets. Small practical difference.`;
+  }
+
+  if (spread <= 40) {
+    return `Available methods differ by ${formatProtein(spread)} in rounded midpoint targets. Moderate difference.`;
+  }
+
+  return `Available methods differ by ${formatProtein(spread)} in rounded midpoint targets. Large difference.`;
+}
+
 function reportEstimateRows(result) {
   return [
     result.estimates.currentWeight,
@@ -1185,14 +1218,11 @@ function reportEstimateRows(result) {
 }
 
 function describeMethodSensitivity(result) {
-  const estimates = reportEstimateRows(result);
+  const spread = getMethodSensitivitySpread(result);
 
-  if (estimates.length < 2) {
+  if (spread === null) {
     return "Only one estimate method is available for these inputs, so there is no method-sensitivity comparison. Add body-fat percentage or known lean body mass to compare current-weight and lean-mass bases.";
   }
-
-  const defaultTargets = estimates.map((estimate) => estimate.display.defaultTarget);
-  const spread = Math.max(...defaultTargets) - Math.min(...defaultTargets);
 
   if (spread === 0) {
     return "The available methods produce the same rounded default target. The chosen basis does not materially change the practical result for these inputs.";
@@ -1207,6 +1237,52 @@ function describeMethodSensitivity(result) {
   }
 
   return `The available methods differ by ${formatProtein(spread)} in rounded midpoint targets. That is a large difference; body-composition and goal-weight assumptions meaningfully affect the recommendation.`;
+}
+
+function buildSummaryReport(result, href) {
+  const shareUrl = buildShareUrl(buildShareInputFromResult(result), href);
+  const lines = [
+    "Protein target summary",
+    "",
+    `Default target: ${formatProtein(result.selected.display.defaultTarget)}`,
+    `Practical range: ${formatRange(result.selected.display.rangeLow, result.selected.display.rangeHigh)}`,
+    `Minimum: ${formatProtein(result.selected.display.minimum)}`,
+    `Basis: ${result.selected.basisLabel}`,
+    "",
+    "Inputs used:",
+    `Goal: ${result.input.goalLabel}`,
+    `Diet phase: ${formatDietPhase(result)}`,
+    `Body weight: ${formatWeightForUser(result, result.body.weightKg)}`,
+  ];
+
+  if (result.body.bodyFatPercentUsed !== null) {
+    lines.push(`Body-fat used: ${optionalPercent(result.body.bodyFatPercentUsed)}`);
+  }
+
+  if (result.input.knownLeanMassKg !== null) {
+    lines.push(`Known lean body mass: ${formatKnownLeanMass(result)}`);
+    lines.push(`Known lean-mass source: ${formatKnownLeanMassMethod(result)}`);
+  }
+
+  if (result.body.goalWeightKg !== null) {
+    lines.push(`Goal-weight estimate: ${formatWeightForUser(result, result.body.goalWeightKg)}`);
+  }
+
+  if (result.input.mealsPerDay !== null) {
+    lines.push(`Per-meal default: ${formatPerMealDefault(result)}`);
+  }
+
+  lines.push(
+    "",
+    `Method sensitivity: ${describeMethodSensitivityShort(result)}`,
+    "",
+    "Open this calculation:",
+    shareUrl,
+    "",
+    "Educational estimate only, not medical advice."
+  );
+
+  return `${lines.join("\n")}\n`;
 }
 
 function buildTextReport(result) {
@@ -1603,10 +1679,11 @@ function renderResults(result, container) {
     </div>
 
     <div class="result-actions" aria-label="Result actions">
-      <button class="secondary-button" type="button" data-result-action="copy">Copy</button>
-      <button class="secondary-button" type="button" data-result-action="share">Copy share link</button>
-      <button class="secondary-button" type="button" data-result-action="txt">Export TXT</button>
-      <button class="secondary-button" type="button" data-result-action="markdown">Export Markdown</button>
+      <button class="secondary-button compact-button" type="button" data-result-action="summary" aria-label="Copy summary" title="Copy summary">Summary</button>
+      <button class="secondary-button compact-button" type="button" data-result-action="report" aria-label="Copy full report" title="Copy full report">Report</button>
+      <button class="secondary-button compact-button" type="button" data-result-action="share" aria-label="Copy share link" title="Copy share link">Link</button>
+      <button class="secondary-button compact-button" type="button" data-result-action="txt" aria-label="Export plain text report" title="Export TXT">TXT</button>
+      <button class="secondary-button compact-button" type="button" data-result-action="markdown" aria-label="Export Markdown report" title="Export Markdown">MD</button>
       <p class="action-status" id="action-status" aria-live="polite"></p>
     </div>
   `;
@@ -2094,9 +2171,14 @@ function initCalculator() {
     const action = button.dataset.resultAction;
 
     try {
-      if (action === "copy") {
+      if (action === "summary") {
+        await copyTextToClipboard(buildSummaryReport(latestResult, window.location.href));
+        setActionStatus("Summary copied to clipboard.");
+      }
+
+      if (action === "report") {
         await copyTextToClipboard(buildTextReport(latestResult));
-        setActionStatus("Results copied to clipboard.");
+        setActionStatus("Full report copied to clipboard.");
       }
 
       if (action === "share") {
@@ -2137,9 +2219,11 @@ if (typeof module !== "undefined") {
     buildMarkdownReport,
     buildShareInputFromResult,
     buildShareUrl,
+    buildSummaryReport,
     buildTextReport,
     calculateProtein,
     describeMethodSensitivity,
+    describeMethodSensitivityShort,
     getDietPhaseOptionsForGoal,
     getTargetBodyFatRelationshipNotice,
     parseShareState,

@@ -8,9 +8,11 @@ const {
   buildMarkdownReport,
   buildShareInputFromResult,
   buildShareUrl,
+  buildSummaryReport,
   buildTextReport,
   calculateProtein,
   describeMethodSensitivity,
+  describeMethodSensitivityShort,
   getDietPhaseOptionsForGoal,
   getTargetBodyFatRelationshipNotice,
   parseShareState,
@@ -666,6 +668,44 @@ test("reports include method sensitivity after estimate comparison", () => {
 
   assert.match(textReport, /Method sensitivity\n- The available methods differ by 20 g\/day/);
   assert.match(markdownReport, /### Method Sensitivity\n\nThe available methods differ by 20 g\/day/);
+});
+
+test("summary report includes compact result and share link", () => {
+  const result = calculate({
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    targetBodyFatPercent: "20",
+  });
+  const summary = buildSummaryReport(
+    result,
+    "https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/"
+  );
+
+  assert.match(summary, /^Protein target summary/);
+  assert.match(summary, /Default target: 180 g\/day/);
+  assert.match(summary, /Practical range: 170-185 g\/day/);
+  assert.match(summary, /Basis: Composite lean-mass\/goal-weight fat-loss basis/);
+  assert.match(summary, /Goal: Fat loss while resistance training/);
+  assert.match(summary, /Diet phase: Moderate deficit/);
+  assert.match(summary, /Body-fat used: 26%/);
+  assert.match(summary, /Goal-weight estimate: 93.4 kg/);
+  assert.match(summary, /Method sensitivity: Available methods differ by 20 g\/day/);
+  assert.match(summary, /Open this calculation:\nhttps:\/\/egemulayim\.github\.io\/evidence-based-resistance-training-protein-intake-calculator\/#pc=1&/);
+  assert.match(summary, /Educational estimate only, not medical advice\./);
+  assert.doesNotMatch(summary, /Calculation choice/);
+});
+
+test("short method sensitivity is concise for summary output", () => {
+  const result = calculate({
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    targetBodyFatPercent: "20",
+  });
+
+  assert.equal(
+    describeMethodSensitivityShort(result),
+    "Available methods differ by 20 g/day in rounded midpoint targets. Small practical difference."
+  );
 });
 
 test("share URLs use hash state for static hosting", () => {
