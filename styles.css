@@ -1027,19 +1027,19 @@ select[aria-invalid="true"] {
     white-space: normal;
   }
 
-  .compact-button {
-    padding-inline: 4px;
-    font-size: 0.74rem;
-  }
-}
-
-@media (max-width: 360px) {
   .result-actions {
+    grid-template-columns: minmax(0, 1.9fr) minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.62fr) minmax(0, 0.5fr);
     gap: 4px;
   }
 
   .compact-button {
     padding-inline: 2px;
     font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .compact-button {
+    font-size: 0.64rem;
   }
 }
