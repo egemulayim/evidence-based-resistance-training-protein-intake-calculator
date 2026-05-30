@@ -1535,17 +1535,37 @@ function setKnownLeanMassCustomMethodVisibility(method) {
 }
 
 function scrollResultsIntoView(resultsPanel) {
-  if (!resultsPanel || typeof resultsPanel.scrollIntoView !== "function") {
+  if (!resultsPanel || typeof window === "undefined") {
     return;
   }
 
   const shouldReduceMotion = window.matchMedia
     && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const currentScrollTop = window.pageYOffset
+    || document.documentElement.scrollTop
+    || document.body.scrollTop
+    || 0;
+  const targetTop = Math.max(0, resultsPanel.getBoundingClientRect().top + currentScrollTop - 12);
+  const resetHorizontalScroll = () => {
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
+  };
 
-  resultsPanel.scrollIntoView({
-    behavior: shouldReduceMotion ? "auto" : "smooth",
-    block: "start",
-  });
+  try {
+    window.scrollTo({
+      top: targetTop,
+      left: 0,
+      behavior: shouldReduceMotion ? "auto" : "smooth",
+    });
+  } catch (error) {
+    window.scrollTo(0, targetTop);
+  }
+
+  resetHorizontalScroll();
+
+  if (typeof window.requestAnimationFrame === "function") {
+    window.requestAnimationFrame(resetHorizontalScroll);
+  }
 }
 
 function getSystemTheme() {

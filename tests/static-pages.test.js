@@ -103,6 +103,15 @@ test("public docs document known lean-mass behavior and measurement caveats", ()
   }
 });
 
+test("mobile result styles avoid result-only horizontal overflow", () => {
+  const styles = read("styles.css");
+
+  assert.match(styles, /html\s*{[^}]*overflow-x:\s*hidden/s);
+  assert.match(styles, /body\s*{[^}]*overflow-x:\s*hidden/s);
+  assert.match(styles, /\.estimate-table\s*{[^}]*table-layout:\s*fixed/s);
+  assert.doesNotMatch(styles, /\.estimate-table\s*{[^}]*white-space:\s*nowrap/s);
+});
+
 test("project text files keep compact slash formatting", () => {
   const offenders = [];
   const spacedSlash = ` ${"/"} `;
