@@ -5,11 +5,14 @@ const test = require("node:test");
 
 const {
   buildMarkdownReport,
+  buildShareInputFromResult,
+  buildShareUrl,
   buildTextReport,
   calculateProtein,
   describeMethodSensitivity,
   getDietPhaseOptionsForGoal,
   getTargetBodyFatRelationshipNotice,
+  parseShareState,
   roundToNearestFive,
   roundToOne,
 } = require("../script.js");
@@ -662,6 +665,79 @@ test("reports include method sensitivity after estimate comparison", () => {
 
   assert.match(textReport, /Method sensitivity\n- The available methods differ by 20 g\/day/);
   assert.match(markdownReport, /### Method Sensitivity\n\nThe available methods differ by 20 g\/day/);
+});
+
+test("share URLs use hash state for static hosting", () => {
+  const shareUrl = buildShareUrl(
+    {
+      unitSystem: "imperial",
+      feet: "6",
+      inches: "1",
+      weightLb: "200",
+      bodyFatPercent: "26",
+      knownLeanMassMethod: "other",
+      knownLeanMassCustomMethod: "Bod Pod",
+      goal: "fat_loss",
+      dietPhase: "moderate_deficit",
+      trainingDays: "5+",
+      targetBodyFatPercent: "20",
+      mealsPerDay: "3",
+    },
+    "https://egemulayim.github.io/evidence-based-resistance-training-protein-intake-calculator/?old=query"
+  );
+  const parsedUrl = new URL(shareUrl);
+
+  assert.equal(parsedUrl.search, "");
+  assert.match(parsedUrl.hash, /^#pc=1&/);
+  assert.match(parsedUrl.hash, /trainingDays=5%2B/);
+  assert.deepEqual(parseShareState(parsedUrl.hash), {
+    unitSystem: "imperial",
+    feet: "6",
+    inches: "1",
+    weightLb: "200",
+    bodyFatPercent: "26",
+    knownLeanMassMethod: "other",
+    knownLeanMassCustomMethod: "Bod Pod",
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    trainingDays: "5+",
+    targetBodyFatPercent: "20",
+    mealsPerDay: "3",
+  });
+  assert.equal(parseShareState("#protein-model"), null);
+});
+
+test("share input is derived from the latest calculated result", () => {
+  const result = calculateProtein({
+    unitSystem: "imperial",
+    feet: "6",
+    inches: "1",
+    weightLb: "200",
+    knownLeanMassLb: "148",
+    knownLeanMassMethod: "other",
+    knownLeanMassCustomMethod: "Bod Pod",
+    goal: "fat_loss",
+    dietPhase: "moderate_deficit",
+    trainingDays: "5+",
+    targetBodyFatPercent: "20",
+    mealsPerDay: "3",
+  });
+
+  assertOk(result);
+  assert.deepEqual(buildShareInputFromResult(result), {
+    unitSystem: "imperial",
+    goal: "fat_loss",
+    trainingDays: "5+",
+    feet: "6",
+    inches: "1",
+    weightLb: "200",
+    knownLeanMassLb: "148",
+    knownLeanMassMethod: "other",
+    knownLeanMassCustomMethod: "Bod Pod",
+    dietPhase: "moderate_deficit",
+    targetBodyFatPercent: "20",
+    mealsPerDay: "3",
+  });
 });
 
 test("reports include known lean body mass context when supplied", () => {

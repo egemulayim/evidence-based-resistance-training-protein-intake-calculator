@@ -34,6 +34,31 @@ const LEAN_MASS_METHOD_LABELS = {
 const VALID_LEAN_MASS_METHODS = Object.keys(LEAN_MASS_METHOD_LABELS);
 const LEAN_MASS_CONFLICT_MIN_KG = 3;
 const LEAN_MASS_CONFLICT_BODY_WEIGHT_FRACTION = 0.03;
+const SHARE_STATE_VERSION = "1";
+const SHARE_STATE_FIELDS = [
+  "unitSystem",
+  "heightCm",
+  "weightKg",
+  "feet",
+  "inches",
+  "weightLb",
+  "bodyFatPercent",
+  "knownLeanMassKg",
+  "knownLeanMassLb",
+  "knownLeanMassMethod",
+  "knownLeanMassCustomMethod",
+  "goal",
+  "dietPhase",
+  "trainingDays",
+  "targetBodyFatPercent",
+  "mealsPerDay",
+];
+const SHARE_STATE_KNOWN_LEAN_MASS_FIELDS = [
+  "knownLeanMassKg",
+  "knownLeanMassLb",
+  "knownLeanMassMethod",
+  "knownLeanMassCustomMethod",
+];
 
 const DIET_PHASES_BY_GOAL = {
   fat_loss: ["moderate_deficit", "aggressive_cut"],
@@ -164,6 +189,103 @@ function parseOptionalText(value) {
 
   const normalized = String(value).replace(/\s+/g, " ").trim();
   return normalized === "" ? null : normalized;
+}
+
+function normalizeShareStateValue(value) {
+  if (value === undefined || value === null) {
+    return "";
+  }
+
+  return String(value).trim();
+}
+
+function buildShareParams(input) {
+  const params = new URLSearchParams();
+  params.set("pc", SHARE_STATE_VERSION);
+
+  SHARE_STATE_FIELDS.forEach((field) => {
+    const value = normalizeShareStateValue(input[field]);
+
+    if (value !== "") {
+      params.set(field, value);
+    }
+  });
+
+  return params;
+}
+
+function buildShareUrl(input, href) {
+  const baseHref = href || (typeof window !== "undefined" ? window.location.href : "https://example.test/");
+  const url = new URL(baseHref);
+  url.search = "";
+  url.hash = buildShareParams(input).toString();
+  return url.toString();
+}
+
+function parseShareState(hash) {
+  const rawHash = typeof hash === "string" ? hash.replace(/^#/, "") : "";
+
+  if (!rawHash) {
+    return null;
+  }
+
+  const params = new URLSearchParams(rawHash);
+  const hasShareState = params.get("pc") === SHARE_STATE_VERSION
+    || SHARE_STATE_FIELDS.some((field) => params.has(field));
+
+  if (!hasShareState) {
+    return null;
+  }
+
+  const state = {};
+
+  SHARE_STATE_FIELDS.forEach((field) => {
+    if (!params.has(field)) {
+      return;
+    }
+
+    const value = normalizeShareStateValue(params.get(field));
+
+    if (value !== "") {
+      state[field] = value;
+    }
+  });
+
+  return Object.keys(state).length > 0 ? state : null;
+}
+
+function setShareStateValue(input, field, value) {
+  if (value !== undefined && value !== null) {
+    input[field] = String(value);
+  }
+}
+
+function buildShareInputFromResult(result) {
+  const input = {
+    unitSystem: result.input.unitSystem,
+    goal: result.input.goal,
+    trainingDays: result.input.trainingDays,
+  };
+
+  if (result.input.unitSystem === "metric") {
+    setShareStateValue(input, "heightCm", result.input.sourceHeight.cm);
+    setShareStateValue(input, "weightKg", result.input.sourceWeight.kg);
+    setShareStateValue(input, "knownLeanMassKg", result.input.sourceKnownLeanMass.kg);
+  } else {
+    setShareStateValue(input, "feet", result.input.sourceHeight.feet);
+    setShareStateValue(input, "inches", result.input.sourceHeight.inches);
+    setShareStateValue(input, "weightLb", result.input.sourceWeight.lb);
+    setShareStateValue(input, "knownLeanMassLb", result.input.sourceKnownLeanMass.lb);
+  }
+
+  setShareStateValue(input, "bodyFatPercent", result.input.bodyFatPercent);
+  setShareStateValue(input, "knownLeanMassMethod", result.input.knownLeanMassMethod);
+  setShareStateValue(input, "knownLeanMassCustomMethod", result.input.knownLeanMassCustomMethod);
+  setShareStateValue(input, "dietPhase", result.input.dietPhase);
+  setShareStateValue(input, "targetBodyFatPercent", result.input.targetBodyFatPercent);
+  setShareStateValue(input, "mealsPerDay", result.input.mealsPerDay);
+
+  return input;
 }
 
 function goalUsesDietPhase(goal) {
@@ -1471,6 +1593,7 @@ function renderResults(result, container) {
 
     <div class="result-actions" aria-label="Result actions">
       <button class="secondary-button" type="button" data-result-action="copy">Copy</button>
+      <button class="secondary-button" type="button" data-result-action="share">Copy share link</button>
       <button class="secondary-button" type="button" data-result-action="txt">Export TXT</button>
       <button class="secondary-button" type="button" data-result-action="markdown">Export Markdown</button>
       <p class="action-status" id="action-status" aria-live="polite"></p>
@@ -1498,6 +1621,98 @@ function getFormInput(form) {
     targetBodyFatPercent: formData.get("targetBodyFatPercent"),
     mealsPerDay: formData.get("mealsPerDay"),
   };
+}
+
+function setNamedFormValue(form, name, value) {
+  const controls = Array.from(form.querySelectorAll(`[name="${name}"]`));
+
+  if (controls.length === 0) {
+    return;
+  }
+
+  if (controls[0].type === "radio") {
+    controls.forEach((control) => {
+      control.checked = control.value === value;
+    });
+    return;
+  }
+
+  const control = controls[0];
+
+  if (control.tagName === "SELECT") {
+    const hasOption = Array.from(control.options).some((option) => option.value === value);
+
+    if (hasOption) {
+      control.value = value;
+    }
+
+    return;
+  }
+
+  control.value = value;
+}
+
+function applyShareStateToForm(form, state) {
+  if (!state) {
+    return false;
+  }
+
+  if (state.unitSystem) {
+    setNamedFormValue(form, "unitSystem", state.unitSystem);
+  }
+
+  const unitSystem = form.querySelector('input[name="unitSystem"]:checked')?.value || "metric";
+  setUnitVisibility(unitSystem);
+
+  if (state.goal) {
+    setNamedFormValue(form, "goal", state.goal);
+  }
+
+  const goal = form.querySelector('select[name="goal"]')?.value || "";
+  setDietPhaseVisibility(goal);
+  setTargetBodyFatVisibility(goal);
+
+  if (state.knownLeanMassMethod) {
+    setNamedFormValue(form, "knownLeanMassMethod", state.knownLeanMassMethod);
+  }
+
+  const knownLeanMassMethod = form.querySelector('select[name="knownLeanMassMethod"]')?.value || "";
+  setKnownLeanMassCustomMethodVisibility(knownLeanMassMethod);
+
+  SHARE_STATE_FIELDS.forEach((field) => {
+    if (
+      field === "unitSystem"
+      || field === "goal"
+      || field === "knownLeanMassMethod"
+      || state[field] === undefined
+    ) {
+      return;
+    }
+
+    setNamedFormValue(form, field, state[field]);
+  });
+
+  if (SHARE_STATE_KNOWN_LEAN_MASS_FIELDS.some((field) => state[field] !== undefined)) {
+    const optionalPanel = form.querySelector(".optional-panel");
+
+    if (optionalPanel) {
+      optionalPanel.open = true;
+    }
+  }
+
+  return true;
+}
+
+function replaceUrlWithShareState(result) {
+  if (
+    typeof window === "undefined"
+    || !window.history
+    || typeof window.history.replaceState !== "function"
+  ) {
+    return;
+  }
+
+  window.history.replaceState(null, "", buildShareUrl(buildShareInputFromResult(result), window.location.href));
 }
 
 function setUnitVisibility(unitSystem) {
@@ -1720,13 +1935,7 @@ function initCalculator() {
     field.addEventListener("change", () => renderImmediateInputMessages(form, messages));
   });
 
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    if (document.activeElement && typeof document.activeElement.blur === "function") {
-      document.activeElement.blur();
-    }
-
+  const calculateAndRender = ({ shouldScroll = true, shouldUpdateShareUrl = false } = {}) => {
     const result = calculateProtein(getFormInput(form));
     renderMessages(messages, result.errors, result.warnings);
 
@@ -1735,13 +1944,49 @@ function initCalculator() {
       status.textContent = "Some inputs need attention before a result can be calculated.";
       resultsContent.className = "results-placeholder";
       resultsContent.innerHTML = "<p>Correct the highlighted input issues and calculate again.</p>";
-      return;
+      return false;
     }
 
     latestResult = result;
     status.textContent = "Protein estimate calculated.";
     renderResults(result, resultsContent);
-    requestAnimationFrame(() => scrollResultsIntoView(resultsPanel));
+
+    if (shouldUpdateShareUrl) {
+      replaceUrlWithShareState(result);
+    }
+
+    if (shouldScroll) {
+      requestAnimationFrame(() => scrollResultsIntoView(resultsPanel));
+    }
+
+    return true;
+  };
+
+  const applySharedStateFromHash = ({ shouldScroll = false } = {}) => {
+    const state = parseShareState(window.location.hash);
+
+    if (!state || !applyShareStateToForm(form, state)) {
+      return false;
+    }
+
+    renderImmediateInputMessages(form, messages);
+    return calculateAndRender({ shouldScroll, shouldUpdateShareUrl: false });
+  };
+
+  applySharedStateFromHash();
+
+  window.addEventListener("hashchange", () => {
+    applySharedStateFromHash();
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    if (document.activeElement && typeof document.activeElement.blur === "function") {
+      document.activeElement.blur();
+    }
+
+    calculateAndRender({ shouldScroll: true, shouldUpdateShareUrl: true });
   });
 
   resultsPanel.addEventListener("click", async (event) => {
@@ -1757,6 +2002,11 @@ function initCalculator() {
       if (action === "copy") {
         await copyTextToClipboard(buildTextReport(latestResult));
         setActionStatus("Results copied to clipboard.");
+      }
+
+      if (action === "share") {
+        await copyTextToClipboard(buildShareUrl(buildShareInputFromResult(latestResult), window.location.href));
+        setActionStatus("Share link copied to clipboard.");
       }
 
       if (action === "txt") {
@@ -1788,11 +2038,14 @@ if (typeof document !== "undefined") {
 if (typeof module !== "undefined") {
   module.exports = {
     buildMarkdownReport,
+    buildShareInputFromResult,
+    buildShareUrl,
     buildTextReport,
     calculateProtein,
     describeMethodSensitivity,
     getDietPhaseOptionsForGoal,
     getTargetBodyFatRelationshipNotice,
+    parseShareState,
     roundToNearestFive,
     roundToOne,
   };

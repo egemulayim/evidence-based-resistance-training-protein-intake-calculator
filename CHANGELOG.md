@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - 2026-05-30
+
+### Added
+
+- Added hash-based share links that restore form inputs, recalculate on load, and work on GitHub Pages without routing changes.
+- Added method sensitivity text to the on-page results and exported reports.
+
 ## [0.1.2] - 2026-05-30
 
 ### Added

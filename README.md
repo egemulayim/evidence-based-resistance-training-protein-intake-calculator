@@ -54,7 +54,7 @@ The repository uses Node's built-in test runner and has no test dependencies.
 npm test
 ```
 
-The regression suite covers calculation formulas, goal/phase gating, target-body-fat scoping, warnings, reports, static page links, and compact slash formatting.
+The regression suite covers calculation formulas, goal/phase gating, target-body-fat scoping, warnings, reports, share-link serialization, static page links, and compact slash formatting.
 
 ## Calculation Summary
 
@@ -80,10 +80,13 @@ For the public calculation rationale, see `calculation.html` in the static site 
 After calculating a result, the page can:
 
 - copy a plain text summary to the clipboard;
+- copy a share link that restores the same form inputs and recalculates in the browser;
 - download a plain text report;
 - download a Markdown report.
 
 Exports are generated in the browser from the current calculation result. No data is sent to a server.
+
+Share links use a URL hash fragment, for example `index.html#pc=1&unitSystem=imperial...`, instead of a query string. This keeps GitHub Pages serving the same static page without routing changes, and the hash fragment is not sent to GitHub Pages in the HTTP request. The link itself still contains the user's entered body data, so it should only be shared intentionally.
 
 ## Changelog
 
